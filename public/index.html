@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>staticgames</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap wrap-wide">
+  <div class="brand"><b>staticgames</b><span class="dot">/</span>pick a game</div>
+
+  <div class="panel">
+    <div class="panel-bar">
+      <span class="chip"></span>
+      <span class="label">GAME SELECT</span>
+    </div>
+    <div class="panel-body">
+      <h1>What are we playing?<span class="cursor"></span></h1>
+      <p class="sub">Pick a game, then create a room and send the link to whoever you're playing with.</p>
+
+      <div class="game-grid" id="game-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { GAMES } from "./games.js";
+
+  const grid = document.getElementById("game-grid");
+
+  GAMES.forEach((game) => {
+    const card = document.createElement(game.enabled ? "a" : "div");
+    card.className = "game-card" + (game.enabled ? "" : " disabled");
+    if (game.enabled) card.href = `room.html?game=${game.id}`;
+
+    card.innerHTML = `
+      <div class="game-card-top">
+        <span class="game-name">${game.name}</span>
+        ${game.enabled ? "" : '<span class="soon-tag">soon</span>'}
+      </div>
+      <p class="game-tagline">${game.tagline}</p>
+      <span class="game-players">${game.players}</span>
+    `;
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>

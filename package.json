@@ -1,0 +1,25 @@
+{
+  "name": "staticgames",
+  "version": "1.0.0",
+  "description": "Static, room-based 2-player browser games. Frontend is plain HTML/CSS/JS (deploy anywhere, e.g. GitHub Pages). Realtime rooms are powered by a Cloudflare Worker + Durable Object (via partyserver), deployed with wrangler.",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "partyserver": "^0.5.8"
+  },
+  "devDependencies": {
+    "wrangler": "^4.107.0",
+    "ws": "^8.21.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "sharp@0.34.5": true,
+    "workerd@1.20260701.1": true
+  }
+}

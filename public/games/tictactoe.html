@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>staticgames — tic-tac-toe</title>
+<link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <a href="../index.html" class="brand-link">staticgames</a>
+    <span class="dot">/</span>tic-tac-toe
+  </div>
+
+  <div class="panel">
+    <div class="panel-bar">
+      <span class="chip" id="conn-chip"></span>
+      <span class="label" id="conn-label">CONNECTING…</span>
+    </div>
+    <div class="panel-body">
+      <div class="status-row">
+        <div class="session-id">session <b id="room-code">----</b></div>
+        <div class="peer-meter" id="peer-meter">
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+      </div>
+
+      <div class="turn-banner" id="turn-banner">&nbsp;</div>
+
+      <div class="board" id="board"></div>
+
+      <div class="you-badge" id="you-badge">&nbsp;</div>
+
+      <div class="actions">
+        <button id="copy-btn" style="flex:1">Copy invite link</button>
+        <button id="restart-btn" style="flex:1">Restart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="copy-toast" id="copy-toast">Link copied</div>
+
+<script type="module" src="tictactoe.js"></script>
+</body>
+</html>
