@@ -5,13 +5,28 @@
   "compatibility_date": "2026-07-01",
   "durable_objects": {
     "bindings": [
-      { "name": "TicTacToe", "class_name": "TicTacToe" },
-      { "name": "ConnectFour", "class_name": "ConnectFour" }
+      {
+        "name": "TicTacToe",
+        "class_name": "TicTacToe"
+      },
+      {
+        "name": "ConnectFour",
+        "class_name": "ConnectFour"
+      }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["TicTacToe"] },
-    { "tag": "v2", "new_sqlite_classes": ["Connect4"] },
-    { "tag": "v3", "renamed_classes": [{ "from": "Connect4", "to": "ConnectFour" }] }
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "TicTacToe"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "ConnectFour"
+      ]
+    }
   ]
 }
