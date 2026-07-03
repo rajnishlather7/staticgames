@@ -6,11 +6,12 @@
   "durable_objects": {
     "bindings": [
       { "name": "TicTacToe", "class_name": "TicTacToe" },
-      { "name": "Connect4", "class_name": "Connect4" }
+      { "name": "ConnectFour", "class_name": "ConnectFour" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["TicTacToe"] },
-    { "tag": "v2", "new_sqlite_classes": ["Connect4"] }
+    { "tag": "v2", "new_sqlite_classes": ["Connect4"] },
+    { "tag": "v3", "renamed_classes": [{ "from": "Connect4", "to": "ConnectFour" }] }
   ]
 }

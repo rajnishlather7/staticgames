@@ -94,7 +94,7 @@ function checkC4Winner(board: C4Board): { winner: C4Player | "draw" | null; winC
 
 type Env = {
   TicTacToe: DurableObjectNamespace<TicTacToe>;
-  Connect4: DurableObjectNamespace<Connect4>;
+  ConnectFour: DurableObjectNamespace<ConnectFour>;
 };
 
 // ─── TicTacToe Class ─────────────────────────────────────────────────────────
@@ -179,9 +179,9 @@ export class TicTacToe extends Server<Env> {
   }
 }
 
-// ─── Connect4 Class ──────────────────────────────────────────────────────────
+// ─── ConnectFour Class ──────────────────────────────────────────────────────────
 
-export class Connect4 extends Server<Env> {
+export class ConnectFour extends Server<Env> {
   game: C4State = emptyC4State();
   players: Record<string, C4Player | "spectator"> = {};
 
