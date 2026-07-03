@@ -80,6 +80,7 @@ socket.addEventListener("close", () => {
 
 // To track state transitions and detect exactly when a game is won
 let lastWinner = null;
+let receivedFirstState = false;
 
 socket.addEventListener("message", (event) => {
   const data = JSON.parse(event.data);
@@ -90,13 +91,16 @@ socket.addEventListener("message", (event) => {
   if (data.type === "state") {
     latest = data;
     
-    // Check if we just transitioned to a win state
-    if (latest.winner && lastWinner === null) {
+    // Check if we just transitioned to a win state (skip the very first
+    // state message — a rejoined/refreshed room may already have a
+    // finished game persisted, and that's not a "new" win)
+    if (receivedFirstState && latest.winner && lastWinner === null) {
       if (latest.winner === "X") scores.X++;
       else if (latest.winner === "O") scores.O++;
       else if (latest.winner === "draw") scores.draws++;
       saveScores();
     }
+    receivedFirstState = true;
     lastWinner = latest.winner;
 
     render();

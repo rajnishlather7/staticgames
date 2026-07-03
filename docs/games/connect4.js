@@ -26,7 +26,7 @@ let scores = { R: 0, Y: 0, draws: 0 };
 try {
   const saved = localStorage.getItem("connect4-scores");
   if (saved) scores = JSON.parse(saved);
-} catch (e) { }
+} catch (e) {}
 
 const score1El = document.getElementById("score-1");
 const score2El = document.getElementById("score-2");
@@ -78,7 +78,7 @@ let latest = { board: Array(C4_COLS * C4_ROWS).fill(null), turn: "R", winner: nu
 
 const socket = new PartySocket({
   host: PARTYKIT_HOST,
-  party: "connect-four",
+  party: "ConnectFour",
   room,
 });
 
@@ -94,6 +94,7 @@ socket.addEventListener("close", () => {
 
 // To track state transitions and detect exactly when a game is won
 let lastWinner = null;
+let receivedFirstState = false;
 
 socket.addEventListener("message", (event) => {
   const data = JSON.parse(event.data);
@@ -103,16 +104,19 @@ socket.addEventListener("message", (event) => {
   }
   if (data.type === "state") {
     latest = data;
-
-    // Check if we just transitioned to a win state
-    if (latest.winner && lastWinner === null) {
+    
+    // Check if we just transitioned to a win state (skip the very first
+    // state message — a rejoined/refreshed room may already have a
+    // finished game persisted, and that's not a "new" win)
+    if (receivedFirstState && latest.winner && lastWinner === null) {
       if (latest.winner === "R") scores.R++;
       else if (latest.winner === "Y") scores.Y++;
       else if (latest.winner === "draw") scores.draws++;
       saveScores();
     }
+    receivedFirstState = true;
     lastWinner = latest.winner;
-
+    
     render();
   }
 });
@@ -121,7 +125,7 @@ function onDropClick(col) {
   if (mySymbol !== "R" && mySymbol !== "Y") return;
   if (latest.winner) return;
   if (latest.turn !== mySymbol) return;
-
+  
   socket.send(JSON.stringify({ type: "drop", col }));
 }
 
@@ -150,7 +154,7 @@ function render() {
     const r = Math.floor(i / C4_COLS);
     const cellIdx = r * C4_COLS + c;
     const cell = cells[cellIdx];
-
+    
     cell.className = "c4-cell" + (val ? ` ${val}` : "");
     if (latest.winCells && latest.winCells.includes(i)) {
       cell.classList.add("win");
