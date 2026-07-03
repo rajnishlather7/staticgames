@@ -32,8 +32,8 @@ export const GAMES = [
     name: "Dice",
     tagline: "Play the game of chance using 6 dice to score the most points or go bust trying.",
     players: "2 players",
-    path: null,
-    enabled: false,
+    path: "games/dice.html",
+    enabled: true,
   },
 ];
 

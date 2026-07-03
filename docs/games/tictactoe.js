@@ -25,7 +25,7 @@ let scores = { X: 0, O: 0, draws: 0 };
 try {
   const saved = localStorage.getItem("tictactoe-scores");
   if (saved) scores = JSON.parse(saved);
-} catch (e) {}
+} catch (e) { }
 
 const score1El = document.getElementById("score-1");
 const score2El = document.getElementById("score-2");
@@ -90,7 +90,7 @@ socket.addEventListener("message", (event) => {
   }
   if (data.type === "state") {
     latest = data;
-    
+
     // Check if we just transitioned to a win state (skip the very first
     // state message — a rejoined/refreshed room may already have a
     // finished game persisted, and that's not a "new" win)
