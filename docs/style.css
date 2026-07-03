@@ -313,7 +313,122 @@ button.ghost { color: var(--text-dim); }
 .you-badge .sym.O { color: var(--cyan); font-weight: 800; }
 .you-badge .sym.spectator { color: var(--text-dim); font-weight: 800; }
 
-.actions { display: flex; gap: 10px; }
+.actions { display: flex; gap: 10px; margin-bottom: 18px; }
+
+/* --- score board --- */
+
+.score-board {
+  display: flex;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.score-card {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.score-card:last-child {
+  border-right: none;
+}
+.score-label {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.score-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.score-card.player1 .score-val { color: var(--amber); }
+.score-card.player2 .score-val { color: var(--cyan); }
+.score-card.player1.c4 .score-val { color: var(--red); }
+.score-reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  background: var(--bg-cell);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.score-reset:hover { background: #212a3a; }
+.score-reset svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-dim);
+  transition: stroke 0.15s;
+}
+.score-reset:hover svg { stroke: var(--text); }
+
+/* --- connect 4 --- */
+
+.c4-board-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.c4-drop-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.c4-drop-btn {
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.c4-drop-btn::before {
+  content: "↓";
+  color: var(--text-dim);
+  font-weight: bold;
+}
+.c4-drop-btn:hover:not(:disabled) {
+  background: #212a3a;
+  border-color: var(--text-dim);
+}
+.c4-drop-btn:hover:not(:disabled)::before { color: var(--text); }
+.c4-drop-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.c4-board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  background: var(--border); /* acts as the blue board structure */
+  padding: 6px;
+  border-radius: var(--radius);
+}
+.c4-cell {
+  aspect-ratio: 1;
+  background: var(--bg-panel); /* hole color (empty) */
+  border-radius: 50%;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.c4-cell.R { background: var(--red); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); }
+.c4-cell.Y { background: var(--cyan); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); }
+.c4-cell.win { box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2), 0 0 12px 2px currentColor; z-index: 1; }
+.c4-cell.win.R { color: var(--red); }
+.c4-cell.win.Y { color: var(--cyan); }
+
+.turn-banner .sym.R { color: var(--red); }
+.turn-banner .sym.Y { color: var(--cyan); }
+.you-badge .sym.R { color: var(--red); font-weight: 800; }
+.you-badge .sym.Y { color: var(--cyan); font-weight: 800; }
 
 .copy-toast {
   position: fixed;

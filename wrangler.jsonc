@@ -5,10 +5,12 @@
   "compatibility_date": "2026-07-01",
   "durable_objects": {
     "bindings": [
-      { "name": "TicTacToe", "class_name": "TicTacToe" }
+      { "name": "TicTacToe", "class_name": "TicTacToe" },
+      { "name": "Connect4", "class_name": "Connect4" }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["TicTacToe"] }
+    { "tag": "v1", "new_sqlite_classes": ["TicTacToe"] },
+    { "tag": "v2", "new_sqlite_classes": ["Connect4"] }
   ]
 }
