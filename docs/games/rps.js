@@ -142,7 +142,7 @@ scoringToggle.addEventListener("click", () => {
 
 const socket = new PartySocket({
   host: PARTYKIT_HOST,
-  party: "rockpaperscissors",
+  party: "rock-paper-scissors",
   room,
   query: {
     ...(validVariant ? { variant: validVariant } : {}),
