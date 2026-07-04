@@ -116,7 +116,7 @@ function renderRulesTable() {
       const beats = RPS_BEATS[choice].filter((b) => choices.includes(b));
       const beatsText = beats.map((b) => `${CHOICE_META[b].icon} ${CHOICE_META[b].label}`).join(", ");
       return `
-        <div class="scoring-row" data-choice="${choice}">
+        <div class="scoring-row wrap-row" data-choice="${choice}">
           <span class="combo">${CHOICE_META[choice].icon} ${CHOICE_META[choice].label}</span>
           <span class="pts">beats ${beatsText}</span>
         </div>`;

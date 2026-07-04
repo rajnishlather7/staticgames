@@ -729,6 +729,23 @@ button.ghost { color: var(--text-dim); }
 .scoring-row.active .combo { color: var(--text); }
 .scoring-row.active .pts { color: var(--amber); }
 
+.scoring-row.wrap-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.scoring-row.wrap-row .pts {
+  white-space: normal;
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 11.5px;
+}
+.scoring-row.wrap-row .combo {
+  color: var(--text);
+  font-weight: 700;
+}
+.scoring-row.wrap-row.active .pts { color: var(--amber); }
+
 .scoring-note {
   font-size: 10.5px;
   color: #556077;
