@@ -472,6 +472,14 @@ button.ghost { color: var(--text-dim); }
 .event-banner.farkle { color: var(--red); }
 .event-banner.hotdice { color: var(--cyan); }
 .event-banner.win { color: var(--amber); }
+.event-banner.hit { color: var(--red); }
+.event-banner.sunk { color: var(--amber); }
+.event-banner.miss { color: var(--text-dim); }
+
+.turn-banner .sym.P1 { color: var(--amber); }
+.turn-banner .sym.P2 { color: var(--cyan); }
+.you-badge .sym.P1 { color: var(--amber); font-weight: 800; }
+.you-badge .sym.P2 { color: var(--cyan); font-weight: 800; }
 
 .dice-row {
   position: relative;
@@ -750,6 +758,180 @@ button.ghost { color: var(--text-dim); }
   }
   .scoring-toggle {
     display: none !important;
+  }
+}
+
+/* --- battleship --- */
+
+.bs-wrap {
+  max-width: 480px;
+}
+
+.bs-fleet-panel {
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.bs-fleet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+.bs-fleet-header button {
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.bs-fleet-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bs-ship-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.bs-ship-chip:hover:not(.placed) {
+  border-color: var(--text-dim);
+}
+.bs-ship-chip.selected {
+  border-color: var(--amber);
+  background: rgba(255, 180, 84, 0.1);
+}
+.bs-ship-chip.placed {
+  opacity: 0.4;
+  cursor: default;
+  text-decoration: line-through;
+}
+.bs-ship-chip .ship-size {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.bs-board-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.bs-board {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 2px;
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 1;
+  background: var(--border);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.bs-cell {
+  background: #0e1420;
+  border-radius: 2px;
+  position: relative;
+  cursor: default;
+  transition: background 0.12s;
+}
+
+/* placement phase */
+.bs-board.placing .bs-cell {
+  cursor: pointer;
+}
+.bs-board.placing .bs-cell:hover {
+  background: #1a2434;
+}
+.bs-cell.ship-occupied {
+  background: var(--cyan);
+  opacity: 0.55;
+}
+.bs-cell.placement-preview-ok {
+  background: rgba(95, 212, 208, 0.5);
+}
+.bs-cell.placement-preview-bad {
+  background: rgba(255, 107, 107, 0.5);
+}
+.bs-cell.ship-occupied:hover {
+  background: var(--red);
+  opacity: 0.7;
+}
+
+/* battle phase — my board (ships visible, opponent's shots marked) */
+.bs-board.mine .bs-cell.ship-occupied {
+  background: var(--cyan);
+  opacity: 0.35;
+}
+.bs-board.mine .bs-cell.ship-occupied.hit {
+  background: var(--red);
+  opacity: 0.8;
+}
+
+/* battle phase — enemy board (no ship info, only my own shot markers) */
+.bs-board.enemy .bs-cell {
+  cursor: pointer;
+}
+.bs-board.enemy .bs-cell:hover:not(.shot) {
+  background: #1a2434;
+}
+.bs-board.enemy .bs-cell.shot {
+  cursor: default;
+}
+.bs-board.enemy .bs-cell.sunk-ship {
+  background: var(--red);
+  opacity: 0.5;
+}
+
+.bs-cell.marker::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 30%; height: 30%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.bs-cell.marker.miss::after {
+  background: var(--text-dim);
+}
+.bs-cell.marker.hit::after {
+  background: var(--red);
+  box-shadow: 0 0 6px var(--red);
+}
+
+.bs-boards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+.bs-board-col { width: 100%; }
+.bs-board-label {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+@media (min-width: 700px) {
+  .bs-wrap { max-width: 760px; }
+  .bs-boards {
+    flex-direction: row;
   }
 }
 

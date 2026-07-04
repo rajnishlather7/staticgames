@@ -16,6 +16,10 @@
             {
                 "name": "Dice",
                 "class_name": "Dice"
+            },
+            {
+                "name": "Battleship",
+                "class_name": "Battleship"
             }
         ]
     },
@@ -36,6 +40,12 @@
             "tag": "v3",
             "new_sqlite_classes": [
                 "Dice"
+            ]
+        },
+        {
+            "tag": "v4",
+            "new_sqlite_classes": [
+                "Battleship"
             ]
         }
     ]

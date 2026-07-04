@@ -1,5 +1,3 @@
-// Deploy this file using `npm run deploy' after every change
-
 import { Server, routePartykitRequest, type Connection, type WSMessage } from "partyserver";
 
 // ─── Tic-Tac-Toe ─────────────────────────────────────────────────────────────
@@ -98,6 +96,7 @@ type Env = {
   TicTacToe: DurableObjectNamespace<TicTacToe>;
   ConnectFour: DurableObjectNamespace<ConnectFour>;
   Dice: DurableObjectNamespace<Dice>;
+  Battleship: DurableObjectNamespace<Battleship>;
 };
 
 // ─── TicTacToe Class ─────────────────────────────────────────────────────────
@@ -482,13 +481,16 @@ export class Dice extends Server<Env> {
       this.game.dice = newDice;
 
       if (!canScoreAny(newValues)) {
-        // Farkle — lose unbanked points, turn passes immediately
+        // Farkle — lose unbanked points, turn passes immediately, but keep the
+        // busted dice visible in state so the client can show what busted
+        // before the next roll clears them.
         this.game.turnScore = 0;
         this.game.eventSeq++;
         this.game.lastEvent = { type: "farkle", player: this.game.turn };
         this.game.turn = this.game.turn === "P1" ? "P2" : "P1";
         this.game.kept = [false, false, false, false, false, false];
-        this.game.dice = [0, 0, 0, 0, 0, 0];
+        // NOTE: dice values are intentionally left as-is (the busted roll) —
+        // they get cleared to blank at the start of the next successful roll.
         this.game.phase = "idle";
       } else {
         this.game.phase = "must-select";
@@ -552,7 +554,307 @@ export class Dice extends Server<Env> {
   }
 }
 
-// ─── Fetch Router ────────────────────────────────────────────────────────────
+// ─── Battleship ──────────────────────────────────────────────────────────────
+
+type BSPlayer = "P1" | "P2";
+type BSPhase = "placing" | "battle" | "gameover";
+type Cell = [number, number]; // [row, col], 0-indexed, 10x10 board
+
+const BOARD_SIZE = 10;
+const SHIP_DEFS = [
+  { name: "Carrier", size: 5 },
+  { name: "Battleship", size: 4 },
+  { name: "Cruiser", size: 3 },
+  { name: "Submarine", size: 3 },
+  { name: "Destroyer", size: 2 },
+] as const;
+
+type BSShip = {
+  name: string;
+  size: number;
+  cells: Cell[];
+  hits: boolean[]; // parallel to cells — true once that cell has been hit
+};
+
+type BSBoard = {
+  ships: BSShip[];
+  shotsAgainst: { cell: Cell; result: "hit" | "miss" }[]; // shots the OPPONENT has fired at this board
+};
+
+type BSLastShot = {
+  by: BSPlayer;
+  cell: Cell;
+  result: "hit" | "miss" | "sunk";
+  shipName?: string;
+} | null;
+
+type BattleshipState = {
+  phase: BSPhase;
+  boards: { P1: BSBoard; P2: BSBoard };
+  ready: { P1: boolean; P2: boolean };
+  turn: BSPlayer;
+  winner: BSPlayer | null;
+  lastShot: BSLastShot;
+  shotSeq: number; // increments on every shot, lets clients detect a genuinely new event
+};
+
+function emptyBoard(): BSBoard {
+  return { ships: [], shotsAgainst: [] };
+}
+
+function emptyBattleshipState(): BattleshipState {
+  return {
+    phase: "placing",
+    boards: { P1: emptyBoard(), P2: emptyBoard() },
+    ready: { P1: false, P2: false },
+    turn: "P1",
+    winner: null,
+    lastShot: null,
+    shotSeq: 0,
+  };
+}
+
+function cellsInBounds(cells: Cell[]): boolean {
+  return cells.every(([r, c]) => r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE);
+}
+
+function buildShipCells(size: number, origin: Cell, horizontal: boolean): Cell[] {
+  const [r, c] = origin;
+  const cells: Cell[] = [];
+  for (let i = 0; i < size; i++) {
+    cells.push(horizontal ? [r, c + i] : [r + i, c]);
+  }
+  return cells;
+}
+
+function isValidFleet(ships: BSShip[]): boolean {
+  // Must have exactly the classic 5 ships, correct sizes, all in bounds, none overlapping.
+  if (ships.length !== SHIP_DEFS.length) return false;
+  const remaining = [...SHIP_DEFS];
+  for (const ship of ships) {
+    const defIdx = remaining.findIndex((d) => d.name === ship.name && d.size === ship.size);
+    if (defIdx === -1) return false;
+    remaining.splice(defIdx, 1);
+    if (ship.cells.length !== ship.size) return false;
+    if (!cellsInBounds(ship.cells)) return false;
+  }
+  const allCells = ships.flatMap((s) => s.cells.map(([r, c]) => `${r},${c}`));
+  if (new Set(allCells).size !== allCells.length) return false; // no overlaps
+  return true;
+}
+
+function allShipsSunk(board: BSBoard): boolean {
+  return board.ships.every((ship) => ship.hits.every(Boolean));
+}
+
+// Strip ship locations from a board — used when sending a player's view of
+// their OPPONENT's board. Only hit/miss shot markers are visible; unhit ship
+// cells stay hidden. Sunk ships ARE revealed (their full cell list), since a
+// fully-sunk ship is common knowledge once it goes down.
+function redactBoardForOpponent(board: BSBoard): { ships: BSShip[]; shotsAgainst: BSBoard["shotsAgainst"] } {
+  const sunkShips = board.ships.filter((s) => s.hits.every(Boolean));
+  return {
+    ships: sunkShips,
+    shotsAgainst: board.shotsAgainst,
+  };
+}
+
+export class Battleship extends Server<Env> {
+  game: BattleshipState = emptyBattleshipState();
+  players: Record<string, BSPlayer | "spectator"> = {};
+
+  async onStart() {
+    const saved = await this.ctx.storage.get<BattleshipState>("game");
+    if (saved) this.game = saved;
+    const savedPlayers = await this.ctx.storage.get<Record<string, BSPlayer | "spectator">>("players");
+    if (savedPlayers) this.players = savedPlayers;
+  }
+
+  async persist() {
+    await this.ctx.storage.put("game", this.game);
+    await this.ctx.storage.put("players", this.players);
+  }
+
+  assignRole(): BSPlayer | "spectator" {
+    const taken = new Set(Object.values(this.players));
+    if (!taken.has("P1")) return "P1";
+    if (!taken.has("P2")) return "P2";
+    return "spectator";
+  }
+
+  opponentOf(p: BSPlayer): BSPlayer {
+    return p === "P1" ? "P2" : "P1";
+  }
+
+  // Unlike the other games, Battleship state is NOT identical for every
+  // connection — each player must see their own ships but only redacted
+  // (hits/misses + sunk-ship outlines) info about their opponent's board.
+  buildStateFor(viewer: BSPlayer | "spectator") {
+    const connectedCount = [...this.getConnections()].length;
+    if (viewer === "spectator") {
+      // Spectators get a fully redacted view of both boards — no ship info at all.
+      return {
+        type: "state",
+        phase: this.game.phase,
+        turn: this.game.turn,
+        winner: this.game.winner,
+        ready: this.game.ready,
+        lastShot: this.game.lastShot,
+        shotSeq: this.game.shotSeq,
+        myBoard: null,
+        opponentBoard: null,
+        players: this.players,
+        connected: connectedCount,
+      };
+    }
+    const opponent = this.opponentOf(viewer);
+    return {
+      type: "state",
+      phase: this.game.phase,
+      turn: this.game.turn,
+      winner: this.game.winner,
+      ready: this.game.ready,
+      lastShot: this.game.lastShot,
+      shotSeq: this.game.shotSeq,
+      myBoard: this.game.boards[viewer], // full detail, including own ship locations
+      opponentBoard: redactBoardForOpponent(this.game.boards[opponent]), // redacted
+      players: this.players,
+      connected: connectedCount,
+    };
+  }
+
+  broadcastState() {
+    for (const connection of this.getConnections()) {
+      const role = this.players[connection.id] ?? "spectator";
+      connection.send(JSON.stringify(this.buildStateFor(role)));
+    }
+  }
+
+  onConnect(connection: Connection) {
+    const role = this.players[connection.id] ?? this.assignRole();
+    this.players[connection.id] = role;
+    connection.send(JSON.stringify({ type: "welcome", connId: connection.id, symbol: role, roomId: this.name }));
+    this.persist();
+    this.broadcastState();
+  }
+
+  onClose(connection: Connection) {
+    delete this.players[connection.id];
+    this.persist();
+    this.broadcastState();
+  }
+
+  async onMessage(connection: Connection, message: WSMessage) {
+    if (typeof message !== "string") return;
+    let data: {
+      type: string;
+      ships?: { name: string; size: number; origin: Cell; horizontal: boolean }[];
+      cell?: Cell;
+    };
+    try {
+      data = JSON.parse(message);
+    } catch {
+      return;
+    }
+
+    if (data.type === "restart") {
+      this.game = emptyBattleshipState();
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    const role = this.players[connection.id];
+    if (role !== "P1" && role !== "P2") return; // spectators can't play
+
+    if (data.type === "place-fleet" && Array.isArray(data.ships)) {
+      if (this.game.phase !== "placing") return;
+      if (this.game.ready[role]) return; // already locked in
+
+      const ships: BSShip[] = data.ships.map((s) => ({
+        name: s.name,
+        size: s.size,
+        cells: buildShipCells(s.size, s.origin, s.horizontal),
+        hits: new Array(s.size).fill(false),
+      }));
+
+      if (!isValidFleet(ships)) return; // reject malformed/overlapping fleets silently
+
+      this.game.boards[role].ships = ships;
+      this.game.ready[role] = true;
+
+      if (this.game.ready.P1 && this.game.ready.P2) {
+        this.game.phase = "battle";
+      }
+
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    if (data.type === "fire" && Array.isArray(data.cell)) {
+      if (this.game.phase !== "battle") return;
+      if (this.game.turn !== role) return;
+
+      const [r, c] = data.cell;
+      if (
+        !Number.isInteger(r) ||
+        !Number.isInteger(c) ||
+        r < 0 ||
+        r >= BOARD_SIZE ||
+        c < 0 ||
+        c >= BOARD_SIZE
+      )
+        return;
+
+      const opponent = this.opponentOf(role);
+      const targetBoard = this.game.boards[opponent];
+
+      const alreadyShot = targetBoard.shotsAgainst.some((s) => s.cell[0] === r && s.cell[1] === c);
+      if (alreadyShot) return; // no wasted/duplicate shots
+
+      // Find a ship occupying this cell, if any, and mark the specific segment hit.
+      let hitShip: BSShip | null = null;
+      let hitSegmentIdx = -1;
+      for (const ship of targetBoard.ships) {
+        const idx = ship.cells.findIndex(([sr, sc]) => sr === r && sc === c);
+        if (idx !== -1) {
+          hitShip = ship;
+          hitSegmentIdx = idx;
+          break;
+        }
+      }
+
+      let result: "hit" | "miss" | "sunk" = "miss";
+      if (hitShip) {
+        hitShip.hits[hitSegmentIdx] = true;
+        result = hitShip.hits.every(Boolean) ? "sunk" : "hit";
+      }
+
+      targetBoard.shotsAgainst.push({ cell: [r, c], result: result === "sunk" ? "hit" : result });
+
+      this.game.shotSeq++;
+      this.game.lastShot = {
+        by: role,
+        cell: [r, c],
+        result,
+        shipName: hitShip ? hitShip.name : undefined,
+      };
+
+      if (allShipsSunk(targetBoard)) {
+        this.game.phase = "gameover";
+        this.game.winner = role;
+      } else {
+        // Turns always alternate, regardless of hit or miss.
+        this.game.turn = opponent;
+      }
+
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+  }
+}
 
 export default {
   async fetch(request: Request, env: Env) {

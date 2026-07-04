@@ -20,12 +20,12 @@ export const GAMES = [
     enabled: true,
   },
   {
-    id: "dots",
-    name: "Dots & Boxes",
-    tagline: "Claim boxes, block your opponent.",
+    id: "battleship",
+    name: "Battleship",
+    tagline: "Hide your fleet, hunt theirs down. Sink all ships to win.",
     players: "2 players",
-    path: null,
-    enabled: false,
+    path: "games/battleship.html",
+    enabled: true,
   },
   {
     id: "dice",

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>staticgames — battleship</title>
+<link rel="stylesheet" href="../style.css" />
+<script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")location.replace("https:"+location.href.slice(5));</script>
+</head>
+<body>
+<div class="wrap bs-wrap">
+  <div class="brand">
+    <a href="../index.html" class="brand-link">staticgames</a>
+    <span class="dot">/</span>battleship
+  </div>
+
+  <div class="panel">
+    <div class="panel-bar">
+      <span class="chip" id="conn-chip"></span>
+      <span class="label" id="conn-label">CONNECTING…</span>
+    </div>
+    <div class="panel-body">
+      <div class="status-row">
+        <div class="session-id">session <b id="room-code">----</b></div>
+        <div class="peer-meter" id="peer-meter">
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+      </div>
+
+      <div class="turn-banner" id="turn-banner">&nbsp;</div>
+      <div class="event-banner" id="event-banner"></div>
+
+      <!-- ─── Placement phase UI ─────────────────────────────────────── -->
+      <div id="placement-section">
+        <div class="bs-fleet-panel">
+          <div class="bs-fleet-header">
+            <span>Place your fleet</span>
+            <button type="button" id="rotate-btn">Rotate ⟳</button>
+          </div>
+          <div class="bs-fleet-list" id="fleet-list">
+            <!-- ship chips added by js -->
+          </div>
+        </div>
+
+        <div class="bs-board-wrap">
+          <div class="bs-board placing" id="placement-board"></div>
+        </div>
+
+        <div class="dice-actions">
+          <button type="button" id="randomize-btn">Randomize</button>
+          <button type="button" class="primary" id="confirm-fleet-btn">Confirm Fleet</button>
+        </div>
+        <p class="hint" style="text-align:center;">Click a ship in the list, then click the board to place it. Click a placed ship to remove it.</p>
+      </div>
+
+      <!-- ─── Battle phase UI ────────────────────────────────────────── -->
+      <div id="battle-section" style="display:none">
+        <div class="bs-boards">
+          <div class="bs-board-col">
+            <div class="bs-board-label">Your fleet</div>
+            <div class="bs-board mine" id="my-board"></div>
+          </div>
+          <div class="bs-board-col">
+            <div class="bs-board-label">Enemy waters</div>
+            <div class="bs-board enemy" id="enemy-board"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="you-badge" id="you-badge">&nbsp;</div>
+
+      <div class="actions">
+        <button id="copy-btn" style="flex:1">Copy invite link</button>
+        <button id="restart-btn" style="flex:1">Restart game</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="copy-toast" id="copy-toast">Link copied</div>
+
+<script type="module" src="battleship.js"></script>
+</body>
+</html>
