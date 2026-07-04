@@ -277,8 +277,9 @@ socket.addEventListener("message", (event) => {
 function showEventBanner(shot) {
   clearTimeout(eventBannerTimeout);
   let text = "";
-  if (shot.result === "sunk") text = `${shot.by} sank the ${shot.shipName}!`;
-  else if (shot.result === "hit") text = `${shot.by} scored a hit!`;
+  const extraTurn = shot.result !== "miss" && shot.by === mySymbol;
+  if (shot.result === "sunk") text = `${shot.by} sank the ${shot.shipName}!${extraTurn ? " Fire again!" : ""}`;
+  else if (shot.result === "hit") text = `${shot.by} scored a hit!${extraTurn ? " Fire again!" : ""}`;
   else text = `${shot.by} missed.`;
   eventBannerEl.textContent = text;
   eventBannerEl.className = `event-banner show ${shot.result}`;

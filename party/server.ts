@@ -846,8 +846,8 @@ export class Battleship extends Server<Env> {
       if (allShipsSunk(targetBoard)) {
         this.game.phase = "gameover";
         this.game.winner = role;
-      } else {
-        // Turns always alternate, regardless of hit or miss.
+      } else if (result === "miss") {
+        // Turn only passes on a miss — a hit (or sunk) earns another shot.
         this.game.turn = opponent;
       }
 
