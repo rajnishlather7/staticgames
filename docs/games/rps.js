@@ -1,5 +1,3 @@
-// RPS game with RPS and RPS lizard-spock variants.
-
 import PartySocket from "https://esm.sh/partysocket@1.3.0";
 import { PARTYKIT_HOST } from "../config.js";
 
@@ -180,7 +178,10 @@ socket.addEventListener("message", (event) => {
     receivedFirstState = true;
     lastSeenRoundSeq = data.roundSeq;
     latest = data;
-    if (variantChanged) renderChoiceButtons();
+    if (variantChanged) {
+      renderChoiceButtons();
+      renderRulesTable();
+    }
     if (!latest.pending[mySymbol]) myLockedChoice = null;
     render();
   }
