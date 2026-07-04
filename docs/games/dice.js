@@ -94,6 +94,21 @@ for (let i = 0; i < 6; i++) {
   diceRowEl.appendChild(die);
 }
 
+// Give each die a resting spot right away so idle/blank dice are scattered
+// rather than all stacked in the exact center of the tray.
+function layoutRestingDice() {
+  const trayRect = diceRowEl.getBoundingClientRect();
+  if (trayRect.width === 0) return; // not yet laid out (e.g. hidden tab)
+  diceRowEl.querySelectorAll(".die").forEach((die, i) => {
+    if (die.style.getPropertyValue("--x")) return; // already placed
+    const { x, y, rot } = randomPlacement(trayRect.width, trayRect.height, i);
+    die.style.setProperty("--x", `${x}px`);
+    die.style.setProperty("--y", `${y}px`);
+    die.style.setProperty("--rot", `${rot}deg`);
+  });
+}
+requestAnimationFrame(layoutRestingDice);
+
 let mySymbol = null; // "P1" | "P2" | "spectator"
 let latest = {
   dice: [0, 0, 0, 0, 0, 0],
@@ -113,6 +128,23 @@ let selected = new Set(); // indices currently toggled by the local player, not 
 let lastSeenEventSeq = null;
 let receivedFirstState = false;
 let eventBannerTimeout = null;
+let prevDice = [0, 0, 0, 0, 0, 0]; // last-seen dice values, used to detect which dice just rolled
+let prevKept = [false, false, false, false, false, false];
+
+// Tray dimensions the dice can be scattered within (die is 44px, tray padding keeps it inboard)
+const DIE_SIZE = 44;
+const TRAY_PADDING = 8;
+
+function randomPlacement(trayWidth, trayHeight, index) {
+  // Divide the tray into 6 loose horizontal lanes so dice don't all overlap in the
+  // exact same spot, then jitter within the lane for a natural scattered look.
+  const lanes = 6;
+  const laneWidth = (trayWidth - DIE_SIZE - TRAY_PADDING * 2) / lanes;
+  const laneX = TRAY_PADDING + DIE_SIZE / 2 + index * laneWidth + Math.random() * laneWidth * 0.6;
+  const y = TRAY_PADDING + DIE_SIZE / 2 + Math.random() * (trayHeight - DIE_SIZE - TRAY_PADDING * 2);
+  const rot = Math.floor(Math.random() * 360) - 180;
+  return { x: laneX, y, rot };
+}
 
 const socket = new PartySocket({
   host: PARTYKIT_HOST,
@@ -216,11 +248,26 @@ function render() {
 
   // dice
   const dieEls = diceRowEl.querySelectorAll(".die");
+  const trayRect = diceRowEl.getBoundingClientRect();
   latest.dice.forEach((value, i) => {
     const die = dieEls[i];
     const isBlank = value === 0;
     const isKept = latest.kept[i];
     const isSelectable = isMyTurn && latest.phase === "must-select" && !isKept && !isBlank;
+
+    // A die "just rolled" if its face value changed and it wasn't already kept —
+    // kept dice hold their position/value and shouldn't re-tumble.
+    const justRolled = !isKept && value !== 0 && value !== prevDice[i];
+
+    if (justRolled) {
+      const { x, y, rot } = randomPlacement(trayRect.width, trayRect.height, i);
+      die.style.setProperty("--x", `${x}px`);
+      die.style.setProperty("--y", `${y}px`);
+      die.style.setProperty("--rot", `${rot}deg`);
+      die.classList.add("rolling");
+      // remove the animation class after it finishes so it can retrigger next roll
+      setTimeout(() => die.classList.remove("rolling"), 500);
+    }
 
     die.dataset.value = isBlank ? "" : String(value);
     die.className =
@@ -228,8 +275,11 @@ function render() {
       (isBlank ? " blank" : "") +
       (isKept ? " kept" : "") +
       (isSelectable ? " selectable" : "") +
-      (selected.has(i) ? " selected" : "");
+      (selected.has(i) ? " selected" : "") +
+      (justRolled ? " rolling" : "");
   });
+  prevDice = [...latest.dice];
+  prevKept = [...latest.kept];
 
   // preview score of current selection
   if (selected.size > 0) {
