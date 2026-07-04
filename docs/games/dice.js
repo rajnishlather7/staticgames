@@ -1,9 +1,11 @@
-// Code for dice game 
 import PartySocket from "https://esm.sh/partysocket@1.3.0";
 import { PARTYKIT_HOST } from "../config.js";
 
 const params = new URLSearchParams(window.location.search);
 const room = (params.get("room") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const requestedTarget = Number(params.get("target"));
+const validTargets = [500, 1000, 2000, 4000, 5000];
+const targetToRequest = validTargets.includes(requestedTarget) ? requestedTarget : null;
 
 if (!room) {
   window.location.href = "../index.html";
@@ -28,6 +30,7 @@ const copyBtn = document.getElementById("copy-btn");
 const copyToast = document.getElementById("copy-toast");
 const score1El = document.getElementById("score-1");
 const score2El = document.getElementById("score-2");
+const targetHintEl = document.getElementById("target-hint");
 
 // ─── Client-side scoring preview (mirrors the server's authoritative logic —
 // this is ONLY used for instant UI feedback; the server validates for real) ───
@@ -156,6 +159,9 @@ const socket = new PartySocket({
 socket.addEventListener("open", () => {
   connChip.classList.add("live");
   connLabel.textContent = "CONNECTED";
+  if (targetToRequest) {
+    socket.send(JSON.stringify({ type: "set-target", target: targetToRequest }));
+  }
 });
 
 socket.addEventListener("close", () => {
@@ -332,6 +338,9 @@ function render() {
   const bars = peerMeter.querySelectorAll(".bar");
   const connectedPlayers = Math.min(latest.connected, 2);
   bars.forEach((bar, i) => bar.classList.toggle("on", i < connectedPlayers));
+
+  // target hint
+  if (targetHintEl) targetHintEl.textContent = `First to ${latest.target} wins.`;
 }
 
 render();

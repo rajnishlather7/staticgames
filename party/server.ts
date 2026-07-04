@@ -271,7 +271,8 @@ type DicePlayer = "P1" | "P2";
 type DicePhase = "idle" | "must-select" | "post-select" | "gameover";
 type DiceEvent = { type: "farkle" | "hotdice" | "win"; player: DicePlayer } | null;
 
-const DICE_TARGET = 5000;
+const DEFAULT_DICE_TARGET = 5000;
+const VALID_DICE_TARGETS = new Set([500, 1000, 2000, 4000, 5000]);
 
 type DiceState = {
   dice: number[]; // length 6; 0 = not yet rolled this sub-roll
@@ -283,6 +284,7 @@ type DiceState = {
   winner: DicePlayer | null;
   eventSeq: number;
   lastEvent: DiceEvent;
+  target: number;
 };
 
 function emptyDiceState(): DiceState {
@@ -296,6 +298,7 @@ function emptyDiceState(): DiceState {
     winner: null,
     eventSeq: 0,
     lastEvent: null,
+    target: DEFAULT_DICE_TARGET,
   };
 }
 
@@ -401,7 +404,7 @@ export class Dice extends Server<Env> {
         winner: this.game.winner,
         eventSeq: this.game.eventSeq,
         lastEvent: this.game.lastEvent,
-        target: DICE_TARGET,
+        target: this.game.target,
         players: this.players,
         connected: [...this.getConnections()].length,
       })
@@ -424,7 +427,7 @@ export class Dice extends Server<Env> {
 
   async onMessage(connection: Connection, message: WSMessage) {
     if (typeof message !== "string") return;
-    let data: { type: string; indices?: number[] };
+    let data: { type: string; indices?: number[]; target?: number };
     try {
       data = JSON.parse(message);
     } catch {
@@ -435,6 +438,24 @@ export class Dice extends Server<Env> {
       this.game = emptyDiceState();
       await this.persist();
       this.broadcastState();
+      return;
+    }
+
+    if (data.type === "set-target" && typeof data.target === "number") {
+      const requested = data.target;
+      // Only honor this before the game has actually started (no rolls, no
+      // banked score) so a reconnecting/duplicate message can't rewrite the
+      // win condition mid-game.
+      const gameNotStarted =
+        this.game.phase === "idle" &&
+        this.game.scores.P1 === 0 &&
+        this.game.scores.P2 === 0 &&
+        this.game.dice.every((d) => d === 0);
+      if (gameNotStarted && VALID_DICE_TARGETS.has(requested)) {
+        this.game.target = requested;
+        await this.persist();
+        this.broadcastState();
+      }
       return;
     }
 
@@ -505,7 +526,7 @@ export class Dice extends Server<Env> {
 
       const newTotal = this.game.scores[this.game.turn] + this.game.turnScore;
       this.game.scores[this.game.turn] = newTotal;
-      const wonNow = newTotal >= DICE_TARGET;
+      const wonNow = newTotal >= this.game.target;
       this.game.turnScore = 0;
       this.game.kept = [false, false, false, false, false, false];
       this.game.dice = [0, 0, 0, 0, 0, 0];

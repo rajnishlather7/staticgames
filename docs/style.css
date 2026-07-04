@@ -633,6 +633,24 @@ button.ghost { color: var(--text-dim); }
 .dice-actions button:disabled:hover { border-color: var(--border); }
 .dice-actions button.primary:disabled:hover { filter: none; }
 
+.target-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.target-opt {
+  padding: 10px 4px;
+  font-size: 12.5px;
+  text-align: center;
+}
+.target-opt.selected {
+  background: var(--amber);
+  color: #1a1204;
+  border-color: var(--amber);
+}
+.target-opt.selected:hover { filter: brightness(1.08); }
+
 .copy-toast {
   position: fixed;
   bottom: 24px; left: 50%;

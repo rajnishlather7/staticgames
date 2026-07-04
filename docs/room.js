@@ -18,9 +18,27 @@ if (!game || !game.enabled) {
   gameNameEl.textContent = game.name.toLowerCase();
   document.title = `staticgames — ${game.name}`;
 
+  const targetOptions = [500, 1000, 2000, 4000, 5000];
+  const isDice = game.id === "dice";
+
   panelBody.innerHTML = `
     <h1>Start a game<span class="cursor"></span></h1>
     <p class="sub">Creates a private ${game.name} room. Send the link to whoever you're playing.</p>
+    ${
+      isDice
+        ? `
+    <label>Score to win</label>
+    <div class="target-picker" id="target-picker">
+      ${targetOptions
+        .map(
+          (t, i) =>
+            `<button type="button" class="target-opt${t === 5000 ? " selected" : ""}" data-target="${t}">${t}</button>`
+        )
+        .join("")}
+    </div>
+    `
+        : ""
+    }
     <button class="primary" id="create-btn" style="width:100%">Create room</button>
 
     <div class="divider">OR JOIN EXISTING</div>
@@ -34,6 +52,17 @@ if (!game || !game.enabled) {
     <p class="hint">Rooms are held in memory by the game server and disappear once both players leave. No accounts, no history.</p>
   `;
 
+  let selectedTarget = 5000;
+  if (isDice) {
+    const picker = document.getElementById("target-picker");
+    picker.addEventListener("click", (e) => {
+      const btn = e.target.closest(".target-opt");
+      if (!btn) return;
+      selectedTarget = Number(btn.dataset.target);
+      picker.querySelectorAll(".target-opt").forEach((b) => b.classList.toggle("selected", b === btn));
+    });
+  }
+
   function randomCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars
     let code = "";
@@ -43,7 +72,8 @@ if (!game || !game.enabled) {
 
   document.getElementById("create-btn").addEventListener("click", () => {
     const code = randomCode();
-    window.location.href = `${game.path}?room=${code}`;
+    const targetParam = isDice ? `&target=${selectedTarget}` : "";
+    window.location.href = `${game.path}?room=${code}${targetParam}`;
   });
 
   function join() {
