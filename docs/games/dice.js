@@ -31,6 +31,9 @@ const copyToast = document.getElementById("copy-toast");
 const score1El = document.getElementById("score-1");
 const score2El = document.getElementById("score-2");
 const targetHintEl = document.getElementById("target-hint");
+const scoringToggle = document.getElementById("scoring-toggle");
+const scoringPanel = document.getElementById("scoring-panel");
+const scoringTableEl = document.getElementById("scoring-table");
 
 // ─── Client-side scoring preview (mirrors the server's authoritative logic —
 // this is ONLY used for instant UI feedback; the server validates for real) ───
@@ -80,6 +83,109 @@ function scoreExact(values) {
   }
   return total;
 }
+
+// ─── Scoring reference table ────────────────────────────────────────────────
+// Each rule has an id, display combo text, points text, and a `matches(values)`
+// predicate used to decide whether the current selection lights it up.
+
+const SCORING_RULES = [
+  {
+    id: "single-1",
+    combo: "Single 1",
+    pts: "100 each",
+    matches: (values) => values.length >= 1 && values.every((v) => v === 1) && countFaces(values)[1] < 3,
+  },
+  {
+    id: "single-5",
+    combo: "Single 5",
+    pts: "50 each",
+    matches: (values) => values.length >= 1 && values.every((v) => v === 5) && countFaces(values)[5] < 3,
+  },
+  {
+    id: "triple-1",
+    combo: "Three 1s",
+    pts: "1000",
+    matches: (values) => values.length === 3 && countFaces(values)[1] === 3,
+  },
+  {
+    id: "triple-other",
+    combo: "Three of a kind (2–6)",
+    pts: "face × 100",
+    matches: (values) => {
+      if (values.length !== 3) return false;
+      const c = countFaces(values);
+      for (let f = 2; f <= 6; f++) if (c[f] === 3) return true;
+      return false;
+    },
+  },
+  {
+    id: "four-kind",
+    combo: "Four of a kind",
+    pts: "2× triple value",
+    matches: (values) => {
+      if (values.length !== 4) return false;
+      const c = countFaces(values);
+      return c.some((n) => n === 4);
+    },
+  },
+  {
+    id: "five-kind",
+    combo: "Five of a kind",
+    pts: "3× triple value",
+    matches: (values) => {
+      if (values.length !== 5) return false;
+      const c = countFaces(values);
+      return c.some((n) => n === 5);
+    },
+  },
+  {
+    id: "six-kind",
+    combo: "Six of a kind",
+    pts: "4× triple value",
+    matches: (values) => values.length === 6 && countFaces(values).some((n) => n === 6),
+  },
+  {
+    id: "straight",
+    combo: "Straight (1–6)",
+    pts: "1500",
+    matches: (values) => isStraight(values),
+  },
+  {
+    id: "three-pairs",
+    combo: "Three pairs",
+    pts: "1500",
+    matches: (values) => isThreePairs(values),
+  },
+];
+
+function renderScoringTable() {
+  scoringTableEl.innerHTML =
+    SCORING_RULES.map(
+      (rule) => `
+        <div class="scoring-row" data-rule="${rule.id}">
+          <span class="combo">${rule.combo}</span>
+          <span class="pts">${rule.pts}</span>
+        </div>`
+    ).join("") +
+    `<div class="scoring-note">Every roll must include at least one scoring die, or it's a bust and the turn score is lost.</div>`;
+}
+renderScoringTable();
+
+function updateScoringHighlight(selectedValues) {
+  const rows = scoringTableEl.querySelectorAll(".scoring-row");
+  rows.forEach((row) => row.classList.remove("active"));
+  if (selectedValues.length === 0) return;
+  const rule = SCORING_RULES.find((r) => r.matches(selectedValues));
+  if (rule) {
+    const row = scoringTableEl.querySelector(`.scoring-row[data-rule="${rule.id}"]`);
+    if (row) row.classList.add("active");
+  }
+}
+
+scoringToggle.addEventListener("click", () => {
+  const isOpen = scoringPanel.classList.toggle("open");
+  scoringToggle.classList.toggle("open", isOpen);
+});
 
 // ─── Dice UI ──────────────────────────────────────────────────────────────
 
@@ -192,8 +298,11 @@ socket.addEventListener("message", (event) => {
 function showEventBanner(evt) {
   clearTimeout(eventBannerTimeout);
   let text = "";
-  if (evt.type === "farkle") text = `${evt.player} farkled — turn lost!`;
-  else if (evt.type === "hotdice") text = `${evt.player} — hot dice! Roll all 6 again.`;
+  if (evt.type === "farkle") {
+    text = `BUST — ${evt.player} farkled, turn lost!`;
+    diceRowEl.classList.add("bust-flash");
+    setTimeout(() => diceRowEl.classList.remove("bust-flash"), 900);
+  } else if (evt.type === "hotdice") text = `${evt.player} — hot dice! Roll all 6 again.`;
   else if (evt.type === "win") text = `${evt.player} wins!`;
   eventBannerEl.textContent = text;
   eventBannerEl.className = `event-banner show ${evt.type}`;
@@ -293,8 +402,10 @@ function render() {
     const preview = scoreExact(values);
     dicePreviewEl.innerHTML =
       preview > 0 ? `Selected: <b>${preview} pts</b>` : `Selected dice don't form a valid score`;
+    updateScoringHighlight(values);
   } else {
     dicePreviewEl.innerHTML = "&nbsp;";
+    updateScoringHighlight([]);
   }
 
   // turn pot
