@@ -24,7 +24,7 @@ const copyBtn = document.getElementById("copy-btn");
 const copyToast = document.getElementById("copy-toast");
 
 // Scores
-let scores = { R: 0, Y: 0, draws: 0 };
+let scores = { R: 0, C: 0, draws: 0 };
 try {
   const saved = localStorage.getItem("connect4-scores");
   if (saved) scores = JSON.parse(saved);
@@ -37,7 +37,7 @@ const scoreResetBtn = document.getElementById("score-reset-btn");
 
 function updateScoreDisplay() {
   score1El.textContent = scores.R;
-  score2El.textContent = scores.Y;
+  score2El.textContent = scores.C;
   scoreDrawsEl.textContent = scores.draws;
 }
 
@@ -47,7 +47,7 @@ function saveScores() {
 }
 
 scoreResetBtn.addEventListener("click", () => {
-  scores = { R: 0, Y: 0, draws: 0 };
+  scores = { R: 0, C: 0, draws: 0 };
   saveScores();
 });
 
@@ -75,7 +75,7 @@ for (let r = 0; r < C4_ROWS; r++) {
   }
 }
 
-let mySymbol = null; // "R" | "Y" | "spectator"
+let mySymbol = null; // "R" | "C" | "spectator"
 let latest = { board: Array(C4_COLS * C4_ROWS).fill(null), turn: "R", winner: null, winCells: null, players: {}, connected: 0 };
 
 const socket = new PartySocket({
@@ -112,7 +112,7 @@ socket.addEventListener("message", (event) => {
     // finished game persisted, and that's not a "new" win)
     if (receivedFirstState && latest.winner && lastWinner === null) {
       if (latest.winner === "R") scores.R++;
-      else if (latest.winner === "Y") scores.Y++;
+      else if (latest.winner === "C") scores.Y++;
       else if (latest.winner === "draw") scores.draws++;
       saveScores();
     }
@@ -124,7 +124,7 @@ socket.addEventListener("message", (event) => {
 });
 
 function onDropClick(col) {
-  if (mySymbol !== "R" && mySymbol !== "Y") return;
+  if (mySymbol !== "R" && mySymbol !== "C") return;
   if (latest.winner) return;
   if (latest.turn !== mySymbol) return;
 

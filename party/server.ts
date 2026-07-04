@@ -35,7 +35,7 @@ function checkTicWinner(board: TicBoard): { winner: TicSymbol | "draw" | null; l
 
 // ─── Connect 4 ───────────────────────────────────────────────────────────────
 
-type C4Player = "R" | "Y";
+type C4Player = "R" | "C";
 type C4Board = (C4Player | null)[];
 
 const C4_COLS = 7;
@@ -203,7 +203,7 @@ export class ConnectFour extends Server<Env> {
   assignRole(connId: string): C4Player | "spectator" {
     const taken = new Set(Object.values(this.players));
     if (!taken.has("R")) return "R";
-    if (!taken.has("Y")) return "Y";
+    if (!taken.has("C")) return "C";
     return "spectator";
   }
 
@@ -242,7 +242,7 @@ export class ConnectFour extends Server<Env> {
 
     if (data.type === "drop" && typeof data.col === "number") {
       const symbol = this.players[connection.id];
-      if (symbol !== "R" && symbol !== "Y") return;
+      if (symbol !== "R" && symbol !== "C") return;
       if (this.game.winner) return;
       if (symbol !== this.game.turn) return;
       if (data.col < 0 || data.col >= C4_COLS) return;
@@ -254,7 +254,7 @@ export class ConnectFour extends Server<Env> {
       const result = checkC4Winner(this.game.board);
       this.game.winner = result.winner;
       this.game.winCells = result.winCells;
-      this.game.turn = symbol === "R" ? "Y" : "R";
+      this.game.turn = symbol === "R" ? "C" : "R";
       await this.persist();
       this.broadcastState();
     }

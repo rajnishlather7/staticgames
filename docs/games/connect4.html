@@ -1,78 +1,81 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>staticgames — connect four</title>
-<link rel="stylesheet" href="../style.css" />
-<script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")location.replace("https:"+location.href.slice(5));</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>staticgames — connect four</title>
+  <link rel="stylesheet" href="../style.css" />
+  <script>if (location.protocol === "http:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") location.replace("https:" + location.href.slice(5));</script>
 </head>
+
 <body>
-<div class="wrap">
-  <div class="brand">
-    <a href="../index.html" class="brand-link">staticgames</a>
-    <span class="dot">/</span>connect four
+  <div class="wrap">
+    <div class="brand">
+      <a href="../index.html" class="brand-link">staticgames</a>
+      <span class="dot">/</span>connect four
+    </div>
+
+    <div class="panel">
+      <div class="panel-bar">
+        <span class="chip" id="conn-chip"></span>
+        <span class="label" id="conn-label">CONNECTING…</span>
+      </div>
+      <div class="panel-body">
+        <div class="status-row">
+          <div class="session-id">session <b id="room-code">----</b></div>
+          <div class="peer-meter" id="peer-meter">
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+        </div>
+
+        <div class="turn-banner" id="turn-banner">&nbsp;</div>
+
+        <div class="c4-board-container">
+          <div class="c4-drop-row" id="drop-row">
+            <!-- buttons added by js -->
+          </div>
+          <div class="c4-board" id="board">
+            <!-- cells added by js -->
+          </div>
+        </div>
+
+        <div class="you-badge" id="you-badge">&nbsp;</div>
+
+        <div class="actions">
+          <button id="copy-btn" style="flex:1">Copy invite link</button>
+          <button id="restart-btn" style="flex:1">Restart</button>
+        </div>
+
+        <div class="score-board" id="score-board">
+          <div class="score-card player1 c4">
+            <div class="score-label">R Wins</div>
+            <div class="score-val" id="score-1">0</div>
+          </div>
+          <div class="score-card">
+            <div class="score-label">Draws</div>
+            <div class="score-val" id="score-draws">0</div>
+          </div>
+          <div class="score-card player2 c4">
+            <div class="score-label">C Wins</div>
+            <div class="score-val" id="score-2">0</div>
+          </div>
+          <div class="score-reset" id="score-reset-btn" title="Reset Scores">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
 
-  <div class="panel">
-    <div class="panel-bar">
-      <span class="chip" id="conn-chip"></span>
-      <span class="label" id="conn-label">CONNECTING…</span>
-    </div>
-    <div class="panel-body">
-      <div class="status-row">
-        <div class="session-id">session <b id="room-code">----</b></div>
-        <div class="peer-meter" id="peer-meter">
-          <div class="bar"></div>
-          <div class="bar"></div>
-        </div>
-      </div>
+  <div class="copy-toast" id="copy-toast">Link copied</div>
 
-      <div class="turn-banner" id="turn-banner">&nbsp;</div>
-
-      <div class="c4-board-container">
-        <div class="c4-drop-row" id="drop-row">
-          <!-- buttons added by js -->
-        </div>
-        <div class="c4-board" id="board">
-          <!-- cells added by js -->
-        </div>
-      </div>
-
-      <div class="you-badge" id="you-badge">&nbsp;</div>
-
-      <div class="actions">
-        <button id="copy-btn" style="flex:1">Copy invite link</button>
-        <button id="restart-btn" style="flex:1">Restart</button>
-      </div>
-
-      <div class="score-board" id="score-board">
-        <div class="score-card player1 c4">
-          <div class="score-label">R Wins</div>
-          <div class="score-val" id="score-1">0</div>
-        </div>
-        <div class="score-card">
-          <div class="score-label">Draws</div>
-          <div class="score-val" id="score-draws">0</div>
-        </div>
-        <div class="score-card player2 c4">
-          <div class="score-label">Y Wins</div>
-          <div class="score-val" id="score-2">0</div>
-        </div>
-        <div class="score-reset" id="score-reset-btn" title="Reset Scores">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-          </svg>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<div class="copy-toast" id="copy-toast">Link copied</div>
-
-<script type="module" src="connect4.js"></script>
+  <script type="module" src="connect4.js"></script>
 </body>
+
 </html>
