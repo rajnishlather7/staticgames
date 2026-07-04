@@ -80,7 +80,7 @@ let latest = { board: Array(C4_COLS * C4_ROWS).fill(null), turn: "R", winner: nu
 
 const socket = new PartySocket({
   host: PARTYKIT_HOST,
-  party: "Connect-four",
+  party: "connect-four",
   room,
 });
 
