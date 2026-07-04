@@ -1,3 +1,5 @@
+// Deploy this file using `npm run deploy' after every change
+
 import { Server, routePartykitRequest, type Connection, type WSMessage } from "partyserver";
 
 // ─── Tic-Tac-Toe ─────────────────────────────────────────────────────────────
