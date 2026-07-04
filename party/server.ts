@@ -415,6 +415,9 @@ export class Dice extends Server<Env> {
     const role = this.players[connection.id] ?? this.assignRole();
     this.players[connection.id] = role;
 
+    // TEMP DEBUG — remove after confirming target flows through correctly
+    console.log("DICE onConnect ctx.request.url:", ctx.request.url);
+
     // Set the room's win target from the URL the very first time the room is
     // touched (i.e. it's still at default state) — reading it directly off the
     // connect request avoids any race with a follow-up "set-target" message.
@@ -428,12 +431,15 @@ export class Dice extends Server<Env> {
       try {
         const url = new URL(ctx.request.url);
         const requested = Number(url.searchParams.get("target"));
+        console.log("DICE onConnect parsed target param:", url.searchParams.get("target"), "isFreshRoom:", isFreshRoom);
         if (VALID_DICE_TARGETS.has(requested)) {
           this.game.target = requested;
         }
-      } catch {
-        // malformed URL — keep default target
+      } catch (e) {
+        console.log("DICE onConnect URL parse failed:", e);
       }
+    } else {
+      console.log("DICE onConnect skipped target set, isFreshRoom=false. game state:", JSON.stringify(this.game));
     }
 
     connection.send(JSON.stringify({ type: "welcome", connId: connection.id, symbol: role, roomId: this.name }));
