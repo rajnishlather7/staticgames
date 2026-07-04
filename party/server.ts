@@ -35,7 +35,7 @@ function checkTicWinner(board: TicBoard): { winner: TicSymbol | "draw" | null; l
 
 // ─── Connect 4 ───────────────────────────────────────────────────────────────
 
-type C4Player = "R" | "C";
+type C4Player = "R" | "Y";
 type C4Board = (C4Player | null)[];
 
 const C4_COLS = 7;
@@ -98,6 +98,7 @@ type Env = {
   Dice: DurableObjectNamespace<Dice>;
   Battleship: DurableObjectNamespace<Battleship>;
   RockPaperScissors: DurableObjectNamespace<RockPaperScissors>;
+  HandCricket: DurableObjectNamespace<HandCricket>;
 };
 
 // ─── TicTacToe Class ─────────────────────────────────────────────────────────
@@ -203,7 +204,7 @@ export class ConnectFour extends Server<Env> {
   assignRole(connId: string): C4Player | "spectator" {
     const taken = new Set(Object.values(this.players));
     if (!taken.has("R")) return "R";
-    if (!taken.has("C")) return "C";
+    if (!taken.has("Y")) return "Y";
     return "spectator";
   }
 
@@ -242,7 +243,7 @@ export class ConnectFour extends Server<Env> {
 
     if (data.type === "drop" && typeof data.col === "number") {
       const symbol = this.players[connection.id];
-      if (symbol !== "R" && symbol !== "C") return;
+      if (symbol !== "R" && symbol !== "Y") return;
       if (this.game.winner) return;
       if (symbol !== this.game.turn) return;
       if (data.col < 0 || data.col >= C4_COLS) return;
@@ -254,7 +255,7 @@ export class ConnectFour extends Server<Env> {
       const result = checkC4Winner(this.game.board);
       this.game.winner = result.winner;
       this.game.winCells = result.winCells;
-      this.game.turn = symbol === "R" ? "C" : "R";
+      this.game.turn = symbol === "R" ? "Y" : "R";
       await this.persist();
       this.broadcastState();
     }
@@ -1054,6 +1055,302 @@ export class RockPaperScissors extends Server<Env> {
           this.game.pending = { P1: false, P2: false };
           this.game.phase = "choosing";
         }
+      }
+
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+  }
+}
+
+// ─── Hand Cricket ────────────────────────────────────────────────────────────
+
+type HCPlayer = "P1" | "P2";
+type HCPhase = "toss" | "choosing" | "innings1" | "innings2" | "gameover";
+
+const VALID_WICKETS = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+const VALID_OVERS = new Set([1, 10, 0]); // 0 represents "unlimited"
+const DEFAULT_WICKETS = 3;
+const DEFAULT_OVERS = 10;
+const BALLS_PER_OVER = 6;
+
+type HCInnings = {
+  runs: number;
+  wicketsLost: number;
+  ballsBowled: number;
+  target: number | null; // set only for innings2 — the score to chase
+};
+
+function emptyInnings(): HCInnings {
+  return { runs: 0, wicketsLost: 0, ballsBowled: 0, target: null };
+}
+
+type HCLastBall = {
+  batter: HCPlayer;
+  batterChoice: number;
+  bowlerChoice: number;
+  result: "out" | "runs";
+  runsScored: number;
+} | null;
+
+type HCState = {
+  wickets: number; // max wickets per innings
+  overs: number; // 0 = unlimited
+  phase: HCPhase;
+  tossWinner: HCPlayer | null;
+  battingFirst: HCPlayer | null;
+  currentInnings: 1 | 2;
+  currentBatter: HCPlayer | null;
+  currentBowler: HCPlayer | null;
+  innings1: HCInnings;
+  innings2: HCInnings;
+  pending: { P1: boolean; P2: boolean };
+  choices: { P1: number | null; P2: number | null };
+  lastBall: HCLastBall;
+  ballSeq: number;
+  winner: HCPlayer | "tie" | null;
+};
+
+function emptyHCState(): HCState {
+  return {
+    wickets: DEFAULT_WICKETS,
+    overs: DEFAULT_OVERS,
+    phase: "toss",
+    tossWinner: null,
+    battingFirst: null,
+    currentInnings: 1,
+    currentBatter: null,
+    currentBowler: null,
+    innings1: emptyInnings(),
+    innings2: emptyInnings(),
+    pending: { P1: false, P2: false },
+    choices: { P1: null, P2: null },
+    lastBall: null,
+    ballSeq: 0,
+    winner: null,
+  };
+}
+
+export class HandCricket extends Server<Env> {
+  game: HCState = emptyHCState();
+  players: Record<string, HCPlayer | "spectator"> = {};
+
+  async onStart() {
+    const saved = await this.ctx.storage.get<HCState>("game");
+    if (saved) this.game = saved;
+    const savedPlayers = await this.ctx.storage.get<Record<string, HCPlayer | "spectator">>("players");
+    if (savedPlayers) this.players = savedPlayers;
+  }
+
+  async persist() {
+    await this.ctx.storage.put("game", this.game);
+    await this.ctx.storage.put("players", this.players);
+  }
+
+  assignRole(): HCPlayer | "spectator" {
+    const taken = new Set(Object.values(this.players));
+    if (!taken.has("P1")) return "P1";
+    if (!taken.has("P2")) return "P2";
+    return "spectator";
+  }
+
+  opponentOf(p: HCPlayer): HCPlayer {
+    return p === "P1" ? "P2" : "P1";
+  }
+
+  broadcastState() {
+    this.broadcast(
+      JSON.stringify({
+        type: "state",
+        wickets: this.game.wickets,
+        overs: this.game.overs,
+        phase: this.game.phase,
+        tossWinner: this.game.tossWinner,
+        battingFirst: this.game.battingFirst,
+        currentInnings: this.game.currentInnings,
+        currentBatter: this.game.currentBatter,
+        currentBowler: this.game.currentBowler,
+        innings1: this.game.innings1,
+        innings2: this.game.innings2,
+        pending: this.game.pending, // reveals WHO has chosen, never WHAT
+        lastBall: this.game.lastBall,
+        ballSeq: this.game.ballSeq,
+        winner: this.game.winner,
+        players: this.players,
+        connected: [...this.getConnections()].length,
+      })
+    );
+  }
+
+  onConnect(connection: Connection, ctx: { request: Request }) {
+    const role = this.players[connection.id] ?? this.assignRole();
+    this.players[connection.id] = role;
+
+    // Set wickets/overs from the URL the very first time the room is touched —
+    // same atomic-on-connect pattern used for Dice's target and RPS's variant.
+    const isFreshRoom =
+      this.game.phase === "toss" &&
+      this.game.wickets === DEFAULT_WICKETS &&
+      this.game.overs === DEFAULT_OVERS &&
+      this.game.ballSeq === 0;
+    if (isFreshRoom) {
+      try {
+        const url = new URL(ctx.request.url);
+        const requestedWickets = Number(url.searchParams.get("wickets"));
+        if (VALID_WICKETS.has(requestedWickets)) {
+          this.game.wickets = requestedWickets;
+        }
+        const requestedOvers = Number(url.searchParams.get("overs"));
+        if (VALID_OVERS.has(requestedOvers)) {
+          this.game.overs = requestedOvers;
+        }
+      } catch {
+        // malformed URL — keep defaults
+      }
+    }
+
+    connection.send(JSON.stringify({ type: "welcome", connId: connection.id, symbol: role, roomId: this.name }));
+    this.persist();
+    this.broadcastState();
+  }
+
+  onClose(connection: Connection) {
+    delete this.players[connection.id];
+    this.persist();
+    this.broadcastState();
+  }
+
+  currentInningsState(): HCInnings {
+    return this.game.currentInnings === 1 ? this.game.innings1 : this.game.innings2;
+  }
+
+  // Ends the current innings (wickets/overs exhausted, or target reached in
+  // innings2) and either moves to innings2 or finishes the match.
+  endInnings() {
+    if (this.game.currentInnings === 1) {
+      this.game.innings2.target = this.game.innings1.runs + 1; // must EXCEED, not just match
+      this.game.currentInnings = 2;
+      this.game.phase = "innings2";
+      // Swap roles for the second innings.
+      const prevBatter = this.game.currentBatter as HCPlayer;
+      const prevBowler = this.game.currentBowler as HCPlayer;
+      this.game.currentBatter = prevBowler;
+      this.game.currentBowler = prevBatter;
+      this.game.pending = { P1: false, P2: false };
+      this.game.choices = { P1: null, P2: null };
+    } else {
+      this.game.phase = "gameover";
+      const i1 = this.game.innings1.runs;
+      const i2 = this.game.innings2.runs;
+      if (i1 === i2) {
+        this.game.winner = "tie";
+      } else {
+        // Whoever batted in innings1 scored i1; whoever batted in innings2 scored i2.
+        const innings1Batter = this.game.battingFirst as HCPlayer;
+        const innings2Batter = this.opponentOf(innings1Batter);
+        this.game.winner = i1 > i2 ? innings1Batter : innings2Batter;
+      }
+    }
+  }
+
+  async onMessage(connection: Connection, message: WSMessage) {
+    if (typeof message !== "string") return;
+    let data: { type: string; choice?: number; decision?: string };
+    try {
+      data = JSON.parse(message);
+    } catch {
+      return;
+    }
+
+    if (data.type === "restart") {
+      const keepWickets = this.game.wickets;
+      const keepOvers = this.game.overs;
+      this.game = emptyHCState();
+      this.game.wickets = keepWickets;
+      this.game.overs = keepOvers;
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    const role = this.players[connection.id];
+    if (role !== "P1" && role !== "P2") return; // spectators can't play
+
+    if (data.type === "start-toss") {
+      if (this.game.phase !== "toss") return;
+      if (this.game.tossWinner) return; // already tossed
+      this.game.tossWinner = Math.random() < 0.5 ? "P1" : "P2";
+      this.game.phase = "choosing";
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    if (data.type === "toss-decision" && (data.decision === "bat" || data.decision === "bowl")) {
+      if (this.game.phase !== "choosing") return;
+      if (role !== this.game.tossWinner) return; // only the toss winner decides
+
+      const winner = this.game.tossWinner as HCPlayer;
+      const other = this.opponentOf(winner);
+      if (data.decision === "bat") {
+        this.game.battingFirst = winner;
+        this.game.currentBatter = winner;
+        this.game.currentBowler = other;
+      } else {
+        this.game.battingFirst = other;
+        this.game.currentBatter = other;
+        this.game.currentBowler = winner;
+      }
+      this.game.phase = "innings1";
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    if (data.type === "choose-number" && typeof data.choice === "number") {
+      if (this.game.phase !== "innings1" && this.game.phase !== "innings2") return;
+      if (this.game.pending[role]) return; // already locked in this ball
+      if (!Number.isInteger(data.choice) || data.choice < 1 || data.choice > 6) return;
+
+      this.game.choices[role] = data.choice;
+      this.game.pending[role] = true;
+
+      if (this.game.pending.P1 && this.game.pending.P2) {
+        const batter = this.game.currentBatter as HCPlayer;
+        const bowler = this.game.currentBowler as HCPlayer;
+        const batterChoice = this.game.choices[batter] as number;
+        const bowlerChoice = this.game.choices[bowler] as number;
+
+        const innings = this.currentInningsState();
+        const isOut = batterChoice === bowlerChoice;
+
+        if (isOut) {
+          innings.wicketsLost++;
+          this.game.lastBall = { batter, batterChoice, bowlerChoice, result: "out", runsScored: 0 };
+        } else {
+          innings.runs += batterChoice;
+          this.game.lastBall = { batter, batterChoice, bowlerChoice, result: "runs", runsScored: batterChoice };
+        }
+        innings.ballsBowled++;
+        this.game.ballSeq++;
+
+        // Check innings2 early-win: chasing score has exceeded the target.
+        const chaseWon = this.game.currentInnings === 2 && innings.target !== null && innings.runs >= innings.target;
+
+        const wicketsGone = innings.wicketsLost >= this.game.wickets;
+        const oversDone = this.game.overs !== 0 && innings.ballsBowled >= this.game.overs * BALLS_PER_OVER;
+
+        this.game.choices = { P1: null, P2: null };
+        this.game.pending = { P1: false, P2: false };
+
+        if (chaseWon) {
+          this.game.phase = "gameover";
+          this.game.winner = batter; // the chasing batter just won it
+        } else if (wicketsGone || oversDone) {
+          this.endInnings();
+        }
+        // else: same innings continues, next ball proceeds normally
       }
 
       await this.persist();

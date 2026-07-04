@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>staticgames — hand cricket</title>
+<link rel="stylesheet" href="../style.css" />
+<script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")location.replace("https:"+location.href.slice(5));</script>
+</head>
+<body>
+<div class="wrap hc-wrap">
+  <div class="brand">
+    <a href="../index.html" class="brand-link">staticgames</a>
+    <span class="dot">/</span>hand cricket
+  </div>
+
+  <div class="hc-layout">
+    <div class="panel">
+      <div class="panel-bar">
+        <span class="chip" id="conn-chip"></span>
+        <span class="label" id="conn-label">CONNECTING…</span>
+      </div>
+      <div class="panel-body">
+        <div class="status-row">
+          <div class="session-id">session <b id="room-code">----</b></div>
+          <div class="peer-meter" id="peer-meter">
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+        </div>
+
+        <div class="turn-banner" id="turn-banner">&nbsp;</div>
+        <div class="event-banner" id="event-banner"></div>
+
+        <!-- ─── Toss phase ─────────────────────────────────────────────── -->
+        <div id="toss-section" class="hc-phase-section">
+          <button class="primary" id="start-toss-btn" style="width:100%">Flip coin</button>
+        </div>
+
+        <!-- ─── Bat/Bowl decision phase ────────────────────────────────── -->
+        <div id="decision-section" class="hc-phase-section" style="display:none">
+          <div class="dice-actions">
+            <button type="button" id="choose-bat-btn">🏏 Bat first</button>
+            <button type="button" id="choose-bowl-btn">🎯 Bowl first</button>
+          </div>
+        </div>
+
+        <!-- ─── Innings scoreboard ─────────────────────────────────────── -->
+        <div id="innings-section" class="hc-phase-section" style="display:none">
+          <div class="hc-innings-board" id="innings-board">
+            <!-- innings cards added by js -->
+          </div>
+
+          <div class="rps-reveal" id="hc-reveal">
+            <div class="rps-reveal-side">
+              <div class="rps-reveal-label" id="reveal-label-1">You</div>
+              <div class="rps-reveal-icon" id="reveal-icon-1">?</div>
+            </div>
+            <div class="rps-reveal-vs">VS</div>
+            <div class="rps-reveal-side">
+              <div class="rps-reveal-label" id="reveal-label-2">Opponent</div>
+              <div class="rps-reveal-icon" id="reveal-icon-2">?</div>
+            </div>
+          </div>
+
+          <div class="rps-choices five" id="hc-choices">
+            <!-- 1-6 buttons added by js -->
+          </div>
+        </div>
+
+        <button class="scoring-toggle" id="scoring-toggle" type="button">
+          <span>How to play</span>
+          <span class="chevron">&#9662;</span>
+        </button>
+
+        <div class="you-badge" id="you-badge">&nbsp;</div>
+
+        <div class="actions">
+          <button id="copy-btn" style="flex:1">Copy invite link</button>
+          <button id="restart-btn" style="flex:1">Restart game</button>
+        </div>
+
+        <p class="hint" style="text-align:center; margin-top:10px;" id="match-hint">3 wickets · 10 overs</p>
+      </div>
+    </div>
+
+    <div class="panel scoring-panel" id="scoring-panel">
+      <div class="panel-bar">
+        <span class="label">HOW TO PLAY</span>
+      </div>
+      <div class="panel-body scoring-panel-body" id="rules-table">
+        <!-- rows added by js -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="copy-toast" id="copy-toast">Link copied</div>
+
+<script type="module" src="handcricket.js"></script>
+</body>
+</html>

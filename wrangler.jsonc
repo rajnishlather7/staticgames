@@ -24,6 +24,10 @@
             {
                 "name": "RockPaperScissors",
                 "class_name": "RockPaperScissors"
+            },
+            {
+                "name": "HandCricket",
+                "class_name": "HandCricket"
             }
         ]
     },
@@ -56,6 +60,12 @@
             "tag": "v5",
             "new_sqlite_classes": [
                 "RockPaperScissors"
+            ]
+        },
+        {
+            "tag": "v6",
+            "new_sqlite_classes": [
+                "HandCricket"
             ]
         }
     ]

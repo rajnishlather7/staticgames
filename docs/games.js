@@ -43,6 +43,14 @@ export const GAMES = [
     path: "games/rps.html",
     enabled: true,
   },
+  {
+    id: "handcricket",
+    name: "Hand Cricket",
+    tagline: "Toss, pick bat or bowl, throw 1-6. Match numbers and you're out.",
+    players: "2 players",
+    path: "games/handcricket.html",
+    enabled: true,
+  },
 ];
 
 export function getGame(id) {

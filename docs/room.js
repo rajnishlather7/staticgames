@@ -22,6 +22,13 @@ if (!game || !game.enabled) {
   const isDice = game.id === "dice";
   const isRPS = game.id === "rps";
   const roundOptions = [3, 5, 10, 15];
+  const isHandCricket = game.id === "handcricket";
+  const wicketOptions = [1, 2, 3, 5, 10];
+  const overOptions = [
+    { label: "1", value: 1 },
+    { label: "10", value: 10 },
+    { label: "Unlimited", value: 0 },
+  ];
 
   panelBody.innerHTML = `
     <h1>Start a game<span class="cursor"></span></h1>
@@ -55,6 +62,30 @@ if (!game || !game.enabled) {
         .map(
           (n) =>
             `<button type="button" class="target-opt${n === 3 ? " selected" : ""}" data-rounds="${n}">${n}</button>`
+        )
+        .join("")}
+    </div>
+    `
+        : ""
+    }
+    ${
+      isHandCricket
+        ? `
+    <label>Wickets</label>
+    <div class="target-picker" id="wickets-picker" style="grid-template-columns: repeat(5, 1fr);">
+      ${wicketOptions
+        .map(
+          (w) =>
+            `<button type="button" class="target-opt${w === 3 ? " selected" : ""}" data-wickets="${w}">${w}</button>`
+        )
+        .join("")}
+    </div>
+    <label>Overs</label>
+    <div class="target-picker" id="overs-picker" style="grid-template-columns: repeat(3, 1fr);">
+      ${overOptions
+        .map(
+          (o) =>
+            `<button type="button" class="target-opt${o.value === 10 ? " selected" : ""}" data-overs="${o.value}">${o.label}</button>`
         )
         .join("")}
     </div>
@@ -105,6 +136,26 @@ if (!game || !game.enabled) {
     });
   }
 
+  let selectedWickets = 3;
+  let selectedOvers = 10;
+  if (isHandCricket) {
+    const wicketsPicker = document.getElementById("wickets-picker");
+    wicketsPicker.addEventListener("click", (e) => {
+      const btn = e.target.closest(".target-opt");
+      if (!btn) return;
+      selectedWickets = Number(btn.dataset.wickets);
+      wicketsPicker.querySelectorAll(".target-opt").forEach((b) => b.classList.toggle("selected", b === btn));
+    });
+
+    const oversPicker = document.getElementById("overs-picker");
+    oversPicker.addEventListener("click", (e) => {
+      const btn = e.target.closest(".target-opt");
+      if (!btn) return;
+      selectedOvers = Number(btn.dataset.overs);
+      oversPicker.querySelectorAll(".target-opt").forEach((b) => b.classList.toggle("selected", b === btn));
+    });
+  }
+
   function randomCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars
     let code = "";
@@ -117,6 +168,7 @@ if (!game || !game.enabled) {
     let extraParams = "";
     if (isDice) extraParams = `&target=${selectedTarget}`;
     if (isRPS) extraParams = `&variant=${selectedVariant}&target=${selectedRounds}`;
+    if (isHandCricket) extraParams = `&wickets=${selectedWickets}&overs=${selectedOvers}`;
     window.location.href = `${game.path}?room=${code}${extraParams}`;
   });
 
