@@ -35,6 +35,14 @@ export const GAMES = [
     path: "games/dice.html",
     enabled: true,
   },
+  {
+    id: "rps",
+    name: "Rock Paper Scissors",
+    tagline: "Classic or Lizard-Spock. Best of N, simultaneous reveal.",
+    players: "2 players",
+    path: "games/rps.html",
+    enabled: true,
+  },
 ];
 
 export function getGame(id) {

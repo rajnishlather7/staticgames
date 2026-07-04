@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>staticgames — rock paper scissors</title>
+<link rel="stylesheet" href="../style.css" />
+<script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")location.replace("https:"+location.href.slice(5));</script>
+</head>
+<body>
+<div class="wrap rps-wrap">
+  <div class="brand">
+    <a href="../index.html" class="brand-link">staticgames</a>
+    <span class="dot">/</span>rps
+  </div>
+
+  <div class="rps-layout">
+    <div class="panel">
+      <div class="panel-bar">
+        <span class="chip" id="conn-chip"></span>
+        <span class="label" id="conn-label">CONNECTING…</span>
+      </div>
+      <div class="panel-body">
+        <div class="status-row">
+          <div class="session-id">session <b id="room-code">----</b></div>
+          <div class="peer-meter" id="peer-meter">
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+        </div>
+
+        <div class="turn-banner" id="turn-banner">&nbsp;</div>
+        <div class="event-banner" id="event-banner"></div>
+
+        <div class="rps-reveal" id="rps-reveal">
+          <div class="rps-reveal-side">
+            <div class="rps-reveal-label" id="reveal-label-1">You</div>
+            <div class="rps-reveal-icon" id="reveal-icon-1">?</div>
+          </div>
+          <div class="rps-reveal-vs">VS</div>
+          <div class="rps-reveal-side">
+            <div class="rps-reveal-label" id="reveal-label-2">Opponent</div>
+            <div class="rps-reveal-icon" id="reveal-icon-2">?</div>
+          </div>
+        </div>
+
+        <div class="rps-choices" id="rps-choices">
+          <!-- choice buttons added by js -->
+        </div>
+
+        <button class="scoring-toggle" id="scoring-toggle" type="button">
+          <span>Rules guide</span>
+          <span class="chevron">&#9662;</span>
+        </button>
+
+        <div class="you-badge" id="you-badge">&nbsp;</div>
+
+        <div class="actions">
+          <button id="copy-btn" style="flex:1">Copy invite link</button>
+          <button id="restart-btn" style="flex:1">Restart game</button>
+        </div>
+
+        <div class="score-board" id="score-board">
+          <div class="score-card player1">
+            <div class="score-label">P1 Score</div>
+            <div class="score-val" id="score-1">0</div>
+          </div>
+          <div class="score-card player2">
+            <div class="score-label">P2 Score</div>
+            <div class="score-val" id="score-2">0</div>
+          </div>
+        </div>
+        <p class="hint" style="text-align:center; margin-top:10px;" id="target-hint">First to 3 wins.</p>
+      </div>
+    </div>
+
+    <div class="panel scoring-panel" id="scoring-panel">
+      <div class="panel-bar">
+        <span class="label">RULES GUIDE</span>
+      </div>
+      <div class="panel-body scoring-panel-body" id="rules-table">
+        <!-- rows added by js -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="copy-toast" id="copy-toast">Link copied</div>
+
+<script type="module" src="rps.js"></script>
+</body>
+</html>

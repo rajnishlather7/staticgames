@@ -20,6 +20,8 @@ if (!game || !game.enabled) {
 
   const targetOptions = [500, 1000, 2000, 4000, 5000];
   const isDice = game.id === "dice";
+  const isRPS = game.id === "rps";
+  const roundOptions = [3, 5, 10, 15];
 
   panelBody.innerHTML = `
     <h1>Start a game<span class="cursor"></span></h1>
@@ -33,6 +35,26 @@ if (!game || !game.enabled) {
         .map(
           (t, i) =>
             `<button type="button" class="target-opt${t === 5000 ? " selected" : ""}" data-target="${t}">${t}</button>`
+        )
+        .join("")}
+    </div>
+    `
+        : ""
+    }
+    ${
+      isRPS
+        ? `
+    <label>Variant</label>
+    <div class="target-picker" id="variant-picker" style="grid-template-columns: repeat(2, 1fr);">
+      <button type="button" class="target-opt selected" data-variant="classic">Classic</button>
+      <button type="button" class="target-opt" data-variant="lizard-spock">Lizard-Spock</button>
+    </div>
+    <label>First to</label>
+    <div class="target-picker" id="rounds-picker">
+      ${roundOptions
+        .map(
+          (n) =>
+            `<button type="button" class="target-opt${n === 3 ? " selected" : ""}" data-rounds="${n}">${n}</button>`
         )
         .join("")}
     </div>
@@ -63,6 +85,26 @@ if (!game || !game.enabled) {
     });
   }
 
+  let selectedVariant = "classic";
+  let selectedRounds = 3;
+  if (isRPS) {
+    const variantPicker = document.getElementById("variant-picker");
+    variantPicker.addEventListener("click", (e) => {
+      const btn = e.target.closest(".target-opt");
+      if (!btn) return;
+      selectedVariant = btn.dataset.variant;
+      variantPicker.querySelectorAll(".target-opt").forEach((b) => b.classList.toggle("selected", b === btn));
+    });
+
+    const roundsPicker = document.getElementById("rounds-picker");
+    roundsPicker.addEventListener("click", (e) => {
+      const btn = e.target.closest(".target-opt");
+      if (!btn) return;
+      selectedRounds = Number(btn.dataset.rounds);
+      roundsPicker.querySelectorAll(".target-opt").forEach((b) => b.classList.toggle("selected", b === btn));
+    });
+  }
+
   function randomCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars
     let code = "";
@@ -72,8 +114,10 @@ if (!game || !game.enabled) {
 
   document.getElementById("create-btn").addEventListener("click", () => {
     const code = randomCode();
-    const targetParam = isDice ? `&target=${selectedTarget}` : "";
-    window.location.href = `${game.path}?room=${code}${targetParam}`;
+    let extraParams = "";
+    if (isDice) extraParams = `&target=${selectedTarget}`;
+    if (isRPS) extraParams = `&variant=${selectedVariant}&target=${selectedRounds}`;
+    window.location.href = `${game.path}?room=${code}${extraParams}`;
   });
 
   function join() {

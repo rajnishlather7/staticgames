@@ -20,6 +20,10 @@
             {
                 "name": "Battleship",
                 "class_name": "Battleship"
+            },
+            {
+                "name": "RockPaperScissors",
+                "class_name": "RockPaperScissors"
             }
         ]
     },
@@ -46,6 +50,12 @@
             "tag": "v4",
             "new_sqlite_classes": [
                 "Battleship"
+            ]
+        },
+        {
+            "tag": "v5",
+            "new_sqlite_classes": [
+                "RockPaperScissors"
             ]
         }
     ]

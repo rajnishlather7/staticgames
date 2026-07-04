@@ -97,6 +97,7 @@ type Env = {
   ConnectFour: DurableObjectNamespace<ConnectFour>;
   Dice: DurableObjectNamespace<Dice>;
   Battleship: DurableObjectNamespace<Battleship>;
+  RockPaperScissors: DurableObjectNamespace<RockPaperScissors>;
 };
 
 // ─── TicTacToe Class ─────────────────────────────────────────────────────────
@@ -847,6 +848,212 @@ export class Battleship extends Server<Env> {
       } else {
         // Turns always alternate, regardless of hit or miss.
         this.game.turn = opponent;
+      }
+
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+  }
+}
+
+// ─── Rock Paper Scissors (Lizard Spock) ────────────────────────────────────
+
+type RPSPlayer = "P1" | "P2";
+type RPSVariant = "classic" | "lizard-spock";
+type RPSChoice = "rock" | "paper" | "scissors" | "lizard" | "spock";
+
+const RPS_CHOICES: Record<RPSVariant, RPSChoice[]> = {
+  classic: ["rock", "paper", "scissors"],
+  "lizard-spock": ["rock", "paper", "scissors", "lizard", "spock"],
+};
+
+// beats[a] is the set of choices that `a` defeats
+const RPS_BEATS: Record<RPSChoice, RPSChoice[]> = {
+  rock: ["scissors", "lizard"],
+  paper: ["rock", "spock"],
+  scissors: ["paper", "lizard"],
+  lizard: ["paper", "spock"],
+  spock: ["rock", "scissors"],
+};
+
+const VALID_ROUND_TARGETS = new Set([3, 5, 10, 15]);
+const DEFAULT_ROUND_TARGET = 3;
+
+type RPSRoundResult = {
+  choices: { P1: RPSChoice; P2: RPSChoice };
+  winner: RPSPlayer | "draw";
+} | null;
+
+type RPSState = {
+  variant: RPSVariant;
+  target: number; // rounds needed to win the match
+  phase: "choosing" | "reveal" | "gameover";
+  pending: { P1: boolean; P2: boolean }; // true once that player has locked in a choice this round (value itself hidden)
+  choices: { P1: RPSChoice | null; P2: RPSChoice | null };
+  scores: { P1: number; P2: number };
+  lastRound: RPSRoundResult;
+  roundSeq: number;
+  winner: RPSPlayer | null;
+};
+
+function emptyRPSState(): RPSState {
+  return {
+    variant: "classic",
+    target: DEFAULT_ROUND_TARGET,
+    phase: "choosing",
+    pending: { P1: false, P2: false },
+    choices: { P1: null, P2: null },
+    scores: { P1: 0, P2: 0 },
+    lastRound: null,
+    roundSeq: 0,
+    winner: null,
+  };
+}
+
+function resolveRPSRound(a: RPSChoice, b: RPSChoice): "P1" | "P2" | "draw" {
+  if (a === b) return "draw";
+  if (RPS_BEATS[a].includes(b)) return "P1";
+  return "P2";
+}
+
+export class RockPaperScissors extends Server<Env> {
+  game: RPSState = emptyRPSState();
+  players: Record<string, RPSPlayer | "spectator"> = {};
+
+  async onStart() {
+    const saved = await this.ctx.storage.get<RPSState>("game");
+    if (saved) this.game = saved;
+    const savedPlayers = await this.ctx.storage.get<Record<string, RPSPlayer | "spectator">>("players");
+    if (savedPlayers) this.players = savedPlayers;
+  }
+
+  async persist() {
+    await this.ctx.storage.put("game", this.game);
+    await this.ctx.storage.put("players", this.players);
+  }
+
+  assignRole(): RPSPlayer | "spectator" {
+    const taken = new Set(Object.values(this.players));
+    if (!taken.has("P1")) return "P1";
+    if (!taken.has("P2")) return "P2";
+    return "spectator";
+  }
+
+  broadcastState() {
+    this.broadcast(
+      JSON.stringify({
+        type: "state",
+        variant: this.game.variant,
+        target: this.game.target,
+        phase: this.game.phase,
+        pending: this.game.pending, // reveals WHO has chosen, never WHAT they chose
+        scores: this.game.scores,
+        lastRound: this.game.lastRound,
+        roundSeq: this.game.roundSeq,
+        winner: this.game.winner,
+        players: this.players,
+        connected: [...this.getConnections()].length,
+      })
+    );
+  }
+
+  onConnect(connection: Connection, ctx: { request: Request }) {
+    const role = this.players[connection.id] ?? this.assignRole();
+    this.players[connection.id] = role;
+
+    // Set variant + round target from the URL the very first time the room is
+    // touched — same atomic-on-connect pattern used for Dice's win target.
+    const isFreshRoom =
+      this.game.phase === "choosing" &&
+      this.game.scores.P1 === 0 &&
+      this.game.scores.P2 === 0 &&
+      this.game.roundSeq === 0 &&
+      this.game.target === DEFAULT_ROUND_TARGET &&
+      this.game.variant === "classic";
+    if (isFreshRoom) {
+      try {
+        const url = new URL(ctx.request.url);
+        const requestedVariant = url.searchParams.get("variant");
+        if (requestedVariant === "classic" || requestedVariant === "lizard-spock") {
+          this.game.variant = requestedVariant;
+        }
+        const requestedTarget = Number(url.searchParams.get("target"));
+        if (VALID_ROUND_TARGETS.has(requestedTarget)) {
+          this.game.target = requestedTarget;
+        }
+      } catch {
+        // malformed URL — keep defaults
+      }
+    }
+
+    connection.send(JSON.stringify({ type: "welcome", connId: connection.id, symbol: role, roomId: this.name }));
+    this.persist();
+    this.broadcastState();
+  }
+
+  onClose(connection: Connection) {
+    delete this.players[connection.id];
+    this.persist();
+    this.broadcastState();
+  }
+
+  async onMessage(connection: Connection, message: WSMessage) {
+    if (typeof message !== "string") return;
+    let data: { type: string; choice?: string };
+    try {
+      data = JSON.parse(message);
+    } catch {
+      return;
+    }
+
+    if (data.type === "restart") {
+      const keepVariant = this.game.variant;
+      const keepTarget = this.game.target;
+      this.game = emptyRPSState();
+      this.game.variant = keepVariant;
+      this.game.target = keepTarget;
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    const role = this.players[connection.id];
+    if (role !== "P1" && role !== "P2") return; // spectators can't play
+
+    if (data.type === "choose" && typeof data.choice === "string") {
+      if (this.game.phase !== "choosing") return;
+      if (this.game.pending[role]) return; // already locked in this round
+      const validChoices = RPS_CHOICES[this.game.variant];
+      if (!validChoices.includes(data.choice as RPSChoice)) return;
+
+      this.game.choices[role] = data.choice as RPSChoice;
+      this.game.pending[role] = true;
+
+      if (this.game.pending.P1 && this.game.pending.P2) {
+        // Both locked in — resolve the round immediately.
+        const a = this.game.choices.P1 as RPSChoice;
+        const b = this.game.choices.P2 as RPSChoice;
+        const outcome = resolveRPSRound(a, b);
+
+        if (outcome === "P1") this.game.scores.P1++;
+        if (outcome === "P2") this.game.scores.P2++;
+
+        this.game.lastRound = { choices: { P1: a, P2: b }, winner: outcome };
+        this.game.roundSeq++;
+
+        if (this.game.scores.P1 >= this.game.target) {
+          this.game.phase = "gameover";
+          this.game.winner = "P1";
+        } else if (this.game.scores.P2 >= this.game.target) {
+          this.game.phase = "gameover";
+          this.game.winner = "P2";
+        } else {
+          // Reset for the next round, keeping scores.
+          this.game.choices = { P1: null, P2: null };
+          this.game.pending = { P1: false, P2: false };
+          this.game.phase = "choosing";
+        }
       }
 
       await this.persist();
