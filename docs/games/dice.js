@@ -154,6 +154,7 @@ const socket = new PartySocket({
   host: PARTYKIT_HOST,
   party: "dice",
   room,
+  query: targetToRequest ? { target: String(targetToRequest) } : undefined,
 });
 
 socket.addEventListener("open", () => {
