@@ -411,9 +411,31 @@ export class Dice extends Server<Env> {
     );
   }
 
-  onConnect(connection: Connection) {
+  onConnect(connection: Connection, ctx: { request: Request }) {
     const role = this.players[connection.id] ?? this.assignRole();
     this.players[connection.id] = role;
+
+    // Set the room's win target from the URL the very first time the room is
+    // touched (i.e. it's still at default state) — reading it directly off the
+    // connect request avoids any race with a follow-up "set-target" message.
+    const isFreshRoom =
+      this.game.phase === "idle" &&
+      this.game.scores.P1 === 0 &&
+      this.game.scores.P2 === 0 &&
+      this.game.dice.every((d) => d === 0) &&
+      this.game.target === DEFAULT_DICE_TARGET;
+    if (isFreshRoom) {
+      try {
+        const url = new URL(ctx.request.url);
+        const requested = Number(url.searchParams.get("target"));
+        if (VALID_DICE_TARGETS.has(requested)) {
+          this.game.target = requested;
+        }
+      } catch {
+        // malformed URL — keep default target
+      }
+    }
+
     connection.send(JSON.stringify({ type: "welcome", connId: connection.id, symbol: role, roomId: this.name }));
     this.persist();
     this.broadcastState();
@@ -438,24 +460,6 @@ export class Dice extends Server<Env> {
       this.game = emptyDiceState();
       await this.persist();
       this.broadcastState();
-      return;
-    }
-
-    if (data.type === "set-target" && typeof data.target === "number") {
-      const requested = data.target;
-      // Only honor this before the game has actually started (no rolls, no
-      // banked score) so a reconnecting/duplicate message can't rewrite the
-      // win condition mid-game.
-      const gameNotStarted =
-        this.game.phase === "idle" &&
-        this.game.scores.P1 === 0 &&
-        this.game.scores.P2 === 0 &&
-        this.game.dice.every((d) => d === 0);
-      if (gameNotStarted && VALID_DICE_TARGETS.has(requested)) {
-        this.game.target = requested;
-        await this.persist();
-        this.broadcastState();
-      }
       return;
     }
 

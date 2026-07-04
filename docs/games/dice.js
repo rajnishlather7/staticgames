@@ -159,9 +159,6 @@ const socket = new PartySocket({
 socket.addEventListener("open", () => {
   connChip.classList.add("live");
   connLabel.textContent = "CONNECTED";
-  if (targetToRequest) {
-    socket.send(JSON.stringify({ type: "set-target", target: targetToRequest }));
-  }
 });
 
 socket.addEventListener("close", () => {
@@ -240,7 +237,8 @@ restartBtn.addEventListener("click", () => {
 });
 
 copyBtn.addEventListener("click", async () => {
-  const url = `${window.location.origin}${window.location.pathname}?room=${room}`;
+  const targetParam = targetToRequest ? `&target=${targetToRequest}` : "";
+  const url = `${window.location.origin}${window.location.pathname}?room=${room}${targetParam}`;
   try {
     await navigator.clipboard.writeText(url);
   } catch {
