@@ -279,6 +279,12 @@ button.ghost { color: var(--text-dim); }
 .turn-banner .sym.X { color: var(--amber); }
 .turn-banner .sym.O { color: var(--cyan); }
 
+.tt-wrap { max-width: 420px; }
+@media (min-width: 600px) { .tt-wrap { max-width: 520px; } }
+@media (min-width: 900px) { .tt-wrap { max-width: 640px; } }
+@media (min-width: 600px) { .tt-wrap .cell { font-size: 42px; } }
+@media (min-width: 900px) { .tt-wrap .cell { font-size: 52px; } }
+
 .board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -369,6 +375,10 @@ button.ghost { color: var(--text-dim); }
 .score-reset:hover svg { stroke: var(--text); }
 
 /* --- connect 4 --- */
+
+.c4-wrap { max-width: 420px; }
+@media (min-width: 600px) { .c4-wrap { max-width: 560px; } }
+@media (min-width: 900px) { .c4-wrap { max-width: 700px; } }
 
 .c4-board-container {
   display: flex;
@@ -796,6 +806,14 @@ button.ghost { color: var(--text-dim); }
     display: none !important;
   }
 }
+@media (min-width: 1100px) {
+  .dice-wrap, .rps-wrap, .hc-wrap {
+    max-width: 860px;
+  }
+  .scoring-panel {
+    width: 300px;
+  }
+}
 
 /* --- battleship --- */
 
@@ -1165,6 +1183,8 @@ button.ghost { color: var(--text-dim); }
 /* --- ludo --- */
 
 .ludo-wrap { max-width: 440px; }
+@media (min-width: 600px) { .ludo-wrap { max-width: 560px; } }
+@media (min-width: 900px) { .ludo-wrap { max-width: 680px; } }
 
 .ludo-peer-meter { gap: 4px; }
 .ludo-peer-meter .bar { flex: 1; }
@@ -1233,6 +1253,8 @@ button.ghost { color: var(--text-dim); }
   padding: 3px;
   gap: 1px;
 }
+@media (min-width: 600px) { .ludo-board { max-width: 500px; } }
+@media (min-width: 900px) { .ludo-board { max-width: 600px; } }
 
 .ludo-yard { border-radius: 6px; opacity: 0.16; }
 .ludo-yard.R { background: var(--red); }
@@ -1315,4 +1337,9 @@ button.ghost { color: var(--text-dim); }
 
 @media (max-width: 420px) {
   .ludo-seat { font-size: 10px; padding: 5px 2px; }
+}
+
+@media (min-width: 600px) {
+  .ludo-dice { width: 56px; height: 56px; font-size: 34px; }
+  .ludo-seat { font-size: 12.5px; padding: 8px 6px; }
 }
