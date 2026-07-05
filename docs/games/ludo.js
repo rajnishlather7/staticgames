@@ -129,6 +129,20 @@ for (const color of COLORS) {
   });
 }
 
+const seatEls = {}; // "R".."B" -> { chip, dot, label, homeCount }
+
+COLORS.forEach((color) => {
+  const chip = document.createElement("div");
+  chip.className = "ludo-seat";
+  chip.innerHTML = `<span class="dot"></span><div class="seat-label"></div><span class="home-count"></span>`;
+  seatsEl.appendChild(chip);
+  seatEls[color] = {
+    chip,
+    label: chip.querySelector(".seat-label"),
+    homeCount: chip.querySelector(".home-count"),
+  };
+});
+
 const tokenEls = {}; // "R0".."B3" -> element, created lazily and repositioned
 
 function tokenEl(color, idx) {
@@ -251,15 +265,22 @@ copyBtn.addEventListener("click", async () => {
 });
 
 function render() {
-  // seats row
-  seatsEl.innerHTML = "";
+  // seats row — update existing chips in place, never rebuild them
   COLORS.forEach((color) => {
     const seated = latest.seats.includes(color);
-    const chip = document.createElement("div");
-    chip.className = "ludo-seat" + (seated ? ` filled ${color}` : "") + (latest.turn === color && latest.phase === "playing" ? " active" : "");
-    const finishedCount = seated ? latest.tokens[color].filter((p) => p === 57).length : 0;
-    chip.innerHTML = `<span class="dot"></span><div>${seated ? COLOR_NAME[color] : "open"}</div>${seated ? `<span class="home-count">🏠 ${finishedCount}/4</span>` : ""}`;
-    seatsEl.appendChild(chip);
+    const { chip, label, homeCount } = seatEls[color];
+    chip.className =
+      "ludo-seat" +
+      (seated ? ` filled ${color}` : "") +
+      (latest.turn === color && latest.phase === "playing" ? " active" : "");
+    label.textContent = seated ? COLOR_NAME[color] : "open";
+    if (seated) {
+      const finishedCount = latest.tokens[color].filter((p) => p === 57).length;
+      homeCount.textContent = `🏠 ${finishedCount}/4`;
+      homeCount.style.display = "";
+    } else {
+      homeCount.style.display = "none";
+    }
   });
 
   // tokens

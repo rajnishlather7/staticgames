@@ -1347,6 +1347,12 @@ button.ghost { color: var(--text-dim); }
   gap: 10px;
   margin-bottom: 14px;
 }
+.ludo-controls button {
+  min-height: 46px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* Reuse Farkle's .die/.pip component for the roll result, but it needs to sit
    inline in a flex row instead of floating in an absolutely-positioned tray. */
 .ludo-dice.die {
