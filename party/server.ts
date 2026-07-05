@@ -99,6 +99,7 @@ type Env = {
   Battleship: DurableObjectNamespace<Battleship>;
   RockPaperScissors: DurableObjectNamespace<RockPaperScissors>;
   HandCricket: DurableObjectNamespace<HandCricket>;
+  Ludo: DurableObjectNamespace<Ludo>;
 };
 
 // ─── TicTacToe Class ─────────────────────────────────────────────────────────
@@ -1353,6 +1354,298 @@ export class HandCricket extends Server<Env> {
         // else: same innings continues, next ball proceeds normally
       }
 
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+  }
+}
+
+// ─── Ludo ────────────────────────────────────────────────────────────────────
+
+type LudoColor = "R" | "G" | "Y" | "B";
+type LudoPhase = "lobby" | "playing" | "gameover";
+
+const LUDO_COLORS: LudoColor[] = ["R", "G", "Y", "B"];
+
+// Global index (0-51) of each color's entry square on the shared 52-cell track.
+const LUDO_START: Record<LudoColor, number> = { R: 0, G: 13, Y: 26, B: 39 };
+
+// The 8 classic "safe" squares — the 4 start squares plus the 4 star squares.
+// Tokens resting here can never be captured.
+const LUDO_SAFE_GLOBAL = new Set<number>([0, 8, 13, 21, 26, 34, 39, 47]);
+
+// pos: -1 = in yard, 0-50 = on the shared track (51 cells), 51-56 = home column
+// (6 cells), 57 = finished ("home").
+const LUDO_YARD = -1;
+const LUDO_FINISHED = 57;
+const LUDO_HOME_COL_START = 51;
+
+type LudoCaptured = { color: LudoColor; tokenIndex: number };
+
+type LudoLastEvent = {
+  color: LudoColor;
+  dice: number;
+  action: "moved" | "no-move" | "voided-six";
+  tokenIndex?: number;
+  from?: number;
+  to?: number;
+  captured?: LudoCaptured[];
+  finished?: boolean;
+  extraTurn: boolean;
+} | null;
+
+type LudoState = {
+  phase: LudoPhase;
+  seats: LudoColor[]; // colors in use, in join order — fixed once assigned
+  tokens: Record<LudoColor, number[]>; // 4 token positions per seated color
+  turn: LudoColor;
+  dice: number | null;
+  legalMoves: number[]; // token indices the current player may move right now
+  sixStreak: number;
+  winner: LudoColor | null;
+  lastEvent: LudoLastEvent;
+  eventSeq: number;
+};
+
+function emptyLudoState(): LudoState {
+  return {
+    phase: "lobby",
+    seats: [],
+    tokens: { R: [-1, -1, -1, -1], G: [-1, -1, -1, -1], Y: [-1, -1, -1, -1], B: [-1, -1, -1, -1] },
+    turn: "R",
+    dice: null,
+    legalMoves: [],
+    sixStreak: 0,
+    winner: null,
+    lastEvent: null,
+    eventSeq: 0,
+  };
+}
+
+function ludoGlobalCell(color: LudoColor, pos: number): number {
+  return (LUDO_START[color] + pos) % 52;
+}
+
+function ludoLegalMoves(tokens: number[], dice: number): number[] {
+  const moves: number[] = [];
+  tokens.forEach((pos, idx) => {
+    if (pos === LUDO_FINISHED) return;
+    if (pos === LUDO_YARD) {
+      if (dice === 6) moves.push(idx);
+      return;
+    }
+    if (pos + dice <= LUDO_FINISHED) moves.push(idx);
+  });
+  return moves;
+}
+
+export class Ludo extends Server<Env> {
+  game: LudoState = emptyLudoState();
+  players: Record<string, LudoColor | "spectator"> = {};
+
+  async onStart() {
+    const saved = await this.ctx.storage.get<LudoState>("game");
+    if (saved) this.game = saved;
+    const savedPlayers = await this.ctx.storage.get<Record<string, LudoColor | "spectator">>("players");
+    if (savedPlayers) this.players = savedPlayers;
+  }
+
+  async persist() {
+    await this.ctx.storage.put("game", this.game);
+    await this.ctx.storage.put("players", this.players);
+  }
+
+  assignRole(connId: string): LudoColor | "spectator" {
+    const taken = new Set(Object.values(this.players));
+    for (const color of LUDO_COLORS) {
+      if (!taken.has(color)) return color;
+    }
+    return "spectator";
+  }
+
+  broadcastState() {
+    this.broadcast(
+      JSON.stringify({
+        type: "state",
+        phase: this.game.phase,
+        seats: this.game.seats,
+        tokens: this.game.tokens,
+        turn: this.game.turn,
+        dice: this.game.dice,
+        legalMoves: this.game.legalMoves,
+        winner: this.game.winner,
+        lastEvent: this.game.lastEvent,
+        eventSeq: this.game.eventSeq,
+        players: this.players,
+        connected: [...this.getConnections()].length,
+      })
+    );
+  }
+
+  startGame() {
+    this.game.phase = "playing";
+    this.game.turn = this.game.seats[0];
+    this.game.dice = null;
+    this.game.legalMoves = [];
+    this.game.sixStreak = 0;
+    this.game.winner = null;
+  }
+
+  advanceTurn() {
+    const idx = this.game.seats.indexOf(this.game.turn);
+    this.game.turn = this.game.seats[(idx + 1) % this.game.seats.length];
+    this.game.sixStreak = 0;
+    this.game.dice = null;
+    this.game.legalMoves = [];
+  }
+
+  onConnect(connection: Connection) {
+    let role = this.players[connection.id];
+    if (!role) {
+      role = this.assignRole(connection.id);
+      this.players[connection.id] = role;
+      if (role !== "spectator" && !this.game.seats.includes(role)) {
+        this.game.seats.push(role);
+      }
+    }
+    connection.send(JSON.stringify({ type: "welcome", connId: connection.id, symbol: role, roomId: this.name }));
+
+    // Auto-start once the room is full.
+    if (this.game.phase === "lobby" && this.game.seats.length === 4) {
+      this.startGame();
+    }
+
+    this.persist();
+    this.broadcastState();
+  }
+
+  onClose(connection: Connection) {
+    delete this.players[connection.id];
+    this.persist();
+    this.broadcastState();
+  }
+
+  async onMessage(connection: Connection, message: WSMessage) {
+    if (typeof message !== "string") return;
+    let data: { type: string; tokenIndex?: number };
+    try { data = JSON.parse(message); } catch { return; }
+
+    const role = this.players[connection.id];
+
+    if (data.type === "start") {
+      if (this.game.phase !== "lobby") return;
+      if (role === "spectator" || !role) return;
+      if (this.game.seats.length < 2) return;
+      this.startGame();
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    if (data.type === "roll") {
+      if (this.game.phase !== "playing") return;
+      if (role !== this.game.turn) return;
+      if (this.game.dice !== null) return; // already rolled, awaiting a move
+
+      const value = 1 + Math.floor(Math.random() * 6);
+
+      if (value === 6) this.game.sixStreak++;
+      else this.game.sixStreak = 0;
+
+      if (this.game.sixStreak === 3) {
+        // Three sixes in a row voids the move and forfeits the turn.
+        this.game.lastEvent = { color: role, dice: value, action: "voided-six", extraTurn: false };
+        this.game.eventSeq++;
+        this.advanceTurn();
+        await this.persist();
+        this.broadcastState();
+        return;
+      }
+
+      const legal = ludoLegalMoves(this.game.tokens[role], value);
+      if (legal.length === 0) {
+        this.game.lastEvent = { color: role, dice: value, action: "no-move", extraTurn: false };
+        this.game.eventSeq++;
+        this.advanceTurn();
+        await this.persist();
+        this.broadcastState();
+        return;
+      }
+
+      this.game.dice = value;
+      this.game.legalMoves = legal;
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    if (data.type === "move" && typeof data.tokenIndex === "number") {
+      if (this.game.phase !== "playing") return;
+      if (role !== this.game.turn) return;
+      if (this.game.dice === null) return;
+      if (!this.game.legalMoves.includes(data.tokenIndex)) return;
+
+      const dice = this.game.dice;
+      const tokens = this.game.tokens[role];
+      const from = tokens[data.tokenIndex];
+      const to = from === LUDO_YARD ? 0 : from + dice;
+      tokens[data.tokenIndex] = to;
+
+      const captured: LudoCaptured[] = [];
+      if (to >= 0 && to <= 50) {
+        const targetGlobal = ludoGlobalCell(role, to);
+        if (!LUDO_SAFE_GLOBAL.has(targetGlobal)) {
+          for (const otherColor of this.game.seats) {
+            if (otherColor === role) continue;
+            this.game.tokens[otherColor].forEach((opos, oidx) => {
+              if (opos >= 0 && opos <= 50 && ludoGlobalCell(otherColor, opos) === targetGlobal) {
+                this.game.tokens[otherColor][oidx] = LUDO_YARD;
+                captured.push({ color: otherColor, tokenIndex: oidx });
+              }
+            });
+          }
+        }
+      }
+
+      const finished = to === LUDO_FINISHED;
+      const won = finished && tokens.every((p) => p === LUDO_FINISHED);
+      const extraTurn = dice === 6 || captured.length > 0 || finished;
+
+      this.game.lastEvent = {
+        color: role,
+        dice,
+        action: "moved",
+        tokenIndex: data.tokenIndex,
+        from,
+        to,
+        captured,
+        finished,
+        extraTurn,
+      };
+      this.game.eventSeq++;
+      this.game.dice = null;
+      this.game.legalMoves = [];
+
+      if (won) {
+        this.game.phase = "gameover";
+        this.game.winner = role;
+      } else if (extraTurn) {
+        // Same player rolls again — sixStreak is already up to date from the roll.
+      } else {
+        this.advanceTurn();
+      }
+
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+
+    if (data.type === "restart") {
+      const seats = this.game.seats;
+      this.game = emptyLudoState();
+      this.game.seats = seats;
+      if (seats.length >= 2) this.startGame();
       await this.persist();
       this.broadcastState();
       return;

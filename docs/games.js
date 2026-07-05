@@ -51,6 +51,14 @@ export const GAMES = [
     path: "games/handcricket.html",
     enabled: true,
   },
+  {
+    id: "ludo",
+    name: "Ludo",
+    tagline: "Roll, race your 4 tokens home, and send opponents back to base.",
+    players: "2-4 players",
+    path: "games/ludo.html",
+    enabled: true,
+  },
 ];
 
 export function getGame(id) {

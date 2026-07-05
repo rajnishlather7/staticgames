@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>staticgames — ludo</title>
+<link rel="stylesheet" href="../style.css" />
+<script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")location.replace("https:"+location.href.slice(5));</script>
+</head>
+<body>
+<div class="wrap ludo-wrap">
+  <div class="brand">
+    <a href="../index.html" class="brand-link">staticgames</a>
+    <span class="dot">/</span>ludo
+  </div>
+
+  <div class="panel">
+    <div class="panel-bar">
+      <span class="chip" id="conn-chip"></span>
+      <span class="label" id="conn-label">CONNECTING…</span>
+    </div>
+    <div class="panel-body">
+      <div class="status-row">
+        <div class="session-id">session <b id="room-code">----</b></div>
+        <div class="peer-meter ludo-peer-meter" id="peer-meter">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+      </div>
+
+      <div class="turn-banner" id="turn-banner">&nbsp;</div>
+      <div class="event-banner" id="event-banner">&nbsp;</div>
+
+      <div class="ludo-seats" id="ludo-seats"></div>
+
+      <div class="ludo-board-wrap">
+        <div class="ludo-board" id="ludo-board"></div>
+      </div>
+
+      <div class="ludo-controls">
+        <div class="ludo-dice" id="ludo-dice">–</div>
+        <button class="primary" id="roll-btn" style="flex:1" disabled>Roll dice</button>
+      </div>
+
+      <div class="you-badge" id="you-badge">&nbsp;</div>
+
+      <div class="actions">
+        <button id="start-btn" style="width:100%; display:none">Start game</button>
+      </div>
+
+      <div class="actions">
+        <button id="copy-btn" style="flex:1">Copy invite link</button>
+        <button id="restart-btn" style="flex:1">Restart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="copy-toast" id="copy-toast">Link copied</div>
+
+<script type="module" src="ludo.js"></script>
+</body>
+</html>

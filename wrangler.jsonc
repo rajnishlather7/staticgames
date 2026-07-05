@@ -28,6 +28,10 @@
             {
                 "name": "HandCricket",
                 "class_name": "HandCricket"
+            },
+            {
+                "name": "Ludo",
+                "class_name": "Ludo"
             }
         ]
     },
@@ -66,6 +70,12 @@
             "tag": "v6",
             "new_sqlite_classes": [
                 "HandCricket"
+            ]
+        },
+        {
+            "tag": "v7",
+            "new_sqlite_classes": [
+                "Ludo"
             ]
         }
     ]
