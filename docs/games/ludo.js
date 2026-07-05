@@ -29,7 +29,13 @@ const copyToast = document.getElementById("copy-toast");
 
 const COLORS = ["R", "G", "Y", "B"];
 const COLOR_NAME = { R: "Red", G: "Green", Y: "Yellow", B: "Blue" };
-const DICE_FACE = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+const PIP_POSITIONS = ["tl", "tm", "tr", "ml", "mm", "mr", "bl", "bm", "br"];
+diceEl.classList.add("die", "ludo-die", "blank");
+PIP_POSITIONS.forEach((pos) => {
+  const pip = document.createElement("span");
+  pip.className = `pip ${pos}`;
+  diceEl.appendChild(pip);
+});
 
 // The 52-cell shared track, expressed as [row, col] on a 15x15 grid.
 const PATH = [
@@ -172,6 +178,7 @@ socket.addEventListener("close", () => {
 
 let lastSeenEventSeq = -1;
 let eventBannerTimeout = null;
+let lastSeenDice = null;
 
 socket.addEventListener("message", (event) => {
   const data = JSON.parse(event.data);
@@ -283,7 +290,19 @@ function render() {
   });
 
   // dice
-  diceEl.textContent = latest.dice ? DICE_FACE[latest.dice] : "–";
+  if (latest.dice) {
+    diceEl.classList.remove("blank");
+    diceEl.dataset.value = String(latest.dice);
+    if (latest.dice !== lastSeenDice) {
+      diceEl.classList.remove("rolling");
+      void diceEl.offsetWidth; // restart animation
+      diceEl.classList.add("rolling");
+    }
+  } else {
+    diceEl.classList.add("blank");
+    delete diceEl.dataset.value;
+  }
+  lastSeenDice = latest.dice;
 
   // roll button
   const canRoll = latest.phase === "playing" && mySymbol === latest.turn && latest.dice === null;

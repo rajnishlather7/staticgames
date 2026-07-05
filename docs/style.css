@@ -1184,7 +1184,22 @@ button.ghost { color: var(--text-dim); }
 
 .ludo-wrap { max-width: 440px; }
 @media (min-width: 600px) { .ludo-wrap { max-width: 560px; } }
-@media (min-width: 900px) { .ludo-wrap { max-width: 680px; } }
+@media (min-width: 900px) { .ludo-wrap { max-width: 720px; } }
+@media (min-width: 1300px) { .ludo-wrap { max-width: 900px; } }
+
+/* Reserve the event banner's space permanently so a hit/capture/finish
+   message appearing or disappearing never shifts the board underneath it. */
+.ludo-wrap .event-banner {
+  min-height: 18px;
+  max-height: none;
+  overflow: visible;
+  margin-bottom: 10px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.ludo-wrap .event-banner.show {
+  opacity: 1;
+}
 
 .ludo-peer-meter { gap: 4px; }
 .ludo-peer-meter .bar { flex: 1; }
@@ -1254,7 +1269,8 @@ button.ghost { color: var(--text-dim); }
   gap: 1px;
 }
 @media (min-width: 600px) { .ludo-board { max-width: 500px; } }
-@media (min-width: 900px) { .ludo-board { max-width: 600px; } }
+@media (min-width: 900px) { .ludo-board { max-width: 640px; } }
+@media (min-width: 1300px) { .ludo-board { max-width: 820px; } }
 
 .ludo-yard { border-radius: 6px; opacity: 0.16; }
 .ludo-yard.R { background: var(--red); }
@@ -1322,17 +1338,16 @@ button.ghost { color: var(--text-dim); }
   gap: 10px;
   margin-bottom: 14px;
 }
-.ludo-dice {
-  width: 44px;
-  height: 44px;
+/* Reuse Farkle's .die/.pip component for the roll result, but it needs to sit
+   inline in a flex row instead of floating in an absolutely-positioned tray. */
+.ludo-dice.die {
+  position: relative;
+  top: auto;
+  left: auto;
+  margin: 0;
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  background: var(--bg-cell);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
 }
 
 @media (max-width: 420px) {
@@ -1340,6 +1355,9 @@ button.ghost { color: var(--text-dim); }
 }
 
 @media (min-width: 600px) {
-  .ludo-dice { width: 56px; height: 56px; font-size: 34px; }
+  .ludo-dice.die { width: 64px; height: 64px; }
   .ludo-seat { font-size: 12.5px; padding: 8px 6px; }
+}
+@media (min-width: 900px) {
+  .ludo-dice.die { width: 76px; height: 76px; }
 }
