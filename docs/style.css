@@ -35,6 +35,15 @@ html, body {
 .wrap { width: 100%; max-width: 420px; }
 .wrap-wide { max-width: 620px; }
 
+/* On phone-width screens, 24px of body padding + 22px of panel padding on
+   every side eats ~90px of the ~390px you actually have — almost a quarter
+   of the screen — before the board even starts. Claw most of that back. */
+@media (max-width: 480px) {
+  body { padding: 10px; }
+  .panel-body { padding: 14px; }
+  .panel-bar { padding: 8px 10px; }
+}
+
 .brand {
   display: flex;
   align-items: baseline;
