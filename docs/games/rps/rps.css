@@ -1,0 +1,206 @@
+.event-banner.p1win { color: var(--amber); }
+.event-banner.p2win { color: var(--cyan); }
+.event-banner.draw { color: var(--text-dim); }
+
+.rps-wrap {
+  max-width: 420px;
+}
+
+.rps-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rps-reveal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.rps-reveal-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.rps-reveal-label {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.rps-reveal-icon {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  transition: border-color 0.2s, background 0.2s, transform 0.3s;
+}
+.rps-reveal-icon.locked {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.rps-reveal-icon.winner {
+  border-color: var(--amber);
+  background: rgba(255, 180, 84, 0.12);
+  box-shadow: 0 0 14px rgba(255, 180, 84, 0.35);
+  transform: scale(1.08);
+}
+.rps-reveal-icon.loser {
+  opacity: 0.45;
+}
+.rps-reveal-vs {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.rps-choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.rps-choices.five {
+  grid-template-columns: repeat(3, 1fr);
+}
+.rps-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rps-choice-btn .icon {
+  font-size: 26px;
+}
+.rps-choice-btn.selected {
+  border-color: var(--amber);
+  background: rgba(255, 180, 84, 0.12);
+}
+.rps-choice-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.rps-choice-btn:disabled:hover {
+  border-color: var(--border);
+}
+
+
+.scoring-toggle {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  background: var(--bg-cell);
+}
+.scoring-toggle .chevron {
+  transition: transform 0.2s;
+  color: var(--text-dim);
+}
+.scoring-toggle.open .chevron {
+  transform: rotate(180deg);
+}
+
+.scoring-panel {
+  display: none; /* revealed by toggle on mobile, always-on via media query on wide screens */
+}
+.scoring-panel.open {
+  display: block;
+}
+
+.scoring-panel-body {
+  padding: 14px 16px;
+}
+
+.scoring-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.scoring-row:last-child { border-bottom: none; }
+.scoring-row .combo { color: var(--text-dim); }
+.scoring-row .pts { color: var(--text); font-weight: 700; white-space: nowrap; }
+.scoring-row.active {
+  background: rgba(255, 180, 84, 0.1);
+  margin: 0 -16px;
+  padding: 7px 16px;
+  border-radius: 4px;
+}
+.scoring-row.active .combo { color: var(--text); }
+.scoring-row.active .pts { color: var(--amber); }
+
+.scoring-row.wrap-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.scoring-row.wrap-row .pts {
+  white-space: normal;
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 11.5px;
+}
+.scoring-row.wrap-row .combo {
+  color: var(--text);
+  font-weight: 700;
+}
+.scoring-row.wrap-row.active .pts { color: var(--amber); }
+
+.scoring-note {
+  font-size: 10.5px;
+  color: #556077;
+  line-height: 1.5;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+/* Wide screens: side-by-side layout, scoring panel always visible, toggle hidden */
+@media (min-width: 760px) {
+  .rps-wrap {
+    max-width: 700px;
+  }
+  .rps-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .rps-layout .panel:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+  .scoring-panel {
+    display: block !important;
+    width: 240px;
+    flex-shrink: 0;
+  }
+  .scoring-toggle {
+    display: none !important;
+  }
+}
+@media (min-width: 1100px) {
+  .rps-wrap {
+    max-width: 860px;
+  }
+  .scoring-panel {
+    width: 300px;
+  }
+}

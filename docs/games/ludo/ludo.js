@@ -1,7 +1,7 @@
 // Ludo — 2 to 4 players race 4 tokens each around the board and home.
 
 import PartySocket from "https://esm.sh/partysocket@1.3.0";
-import { PARTYKIT_HOST } from "../config.js";
+import { PARTYKIT_HOST } from "../../config.js";
 
 const params = new URLSearchParams(window.location.search);
 const room = (params.get("room") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");

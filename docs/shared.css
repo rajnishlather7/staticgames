@@ -1,0 +1,507 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap");
+
+:root {
+  --bg: #0e121a;
+  --bg-panel: #161c27;
+  --bg-cell: #1c2431;
+  --border: #2a3242;
+  --text: #e9edf3;
+  --text-dim: #8994a8;
+  --amber: #ffb454;
+  --cyan: #5fd4d0;
+  --red: #ff6b6b;
+  --ludo-green: #5fd48a;
+  --ludo-blue: #4d8dff;
+  --radius: 4px;
+}
+* { box-sizing: border-box; }
+html {
+  /* Always reserve the scrollbar's width, even when there's nothing to
+     scroll yet. Without this, a scrollbar popping in/out as page height
+     changes shifts the available width — which can push it across one of
+     the width-based breakpoints below and make the whole board visibly
+     resize for no reason tied to gameplay. */
+  scrollbar-gutter: stable;
+}
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(255, 180, 84, 0.05), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(95, 212, 208, 0.05), transparent 40%);
+  color: var(--text);
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.wrap { width: 100%; max-width: 420px; }
+.wrap-wide { max-width: 620px; }
+
+/* On phone-width screens, 24px of body padding + 22px of panel padding on
+   every side eats ~90px of the ~390px you actually have — almost a quarter
+   of the screen — before the board even starts. Claw most of that back. */
+@media (max-width: 480px) {
+  body { padding: 10px; }
+  .panel-body { padding: 14px; }
+  .panel-bar { padding: 8px 10px; }
+}
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 18px;
+  color: var(--text-dim);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+.brand b, .brand-link {
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+.brand-link:hover { color: var(--amber); }
+.brand .dot { color: var(--amber); }
+
+.back-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-decoration: none;
+}
+.back-link:hover { color: var(--text); }
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.panel-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: #131824;
+}
+.panel-bar .chip {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border);
+}
+.panel-bar .chip.live { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.panel-bar .label {
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.panel-body { padding: 22px; }
+h1 {
+  font-size: 17px;
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+.sub {
+  color: var(--text-dim);
+  font-size: 12.5px;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+input[type="text"] {
+  width: 100%;
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  outline: none;
+  text-transform: uppercase;
+}
+input[type="text"]:focus { border-color: var(--amber); }
+input[type="text"]::placeholder { color: #4a5468; text-transform: none; letter-spacing: normal; }
+.row { display: flex; gap: 10px; }
+
+button {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 11px 16px;
+  cursor: pointer;
+  background: var(--bg-cell);
+  color: var(--text);
+  transition: border-color 0.15s, transform 0.05s;
+}
+button:hover { border-color: var(--text-dim); }
+button:active { transform: translateY(1px); }
+
+button.primary {
+  background: var(--amber);
+  color: #1a1204;
+  border-color: var(--amber);
+  flex: 1;
+}
+button.primary:hover { filter: brightness(1.08); }
+
+button.ghost { color: var(--text-dim); }
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+.divider::before, .divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.cursor {
+  display: inline-block;
+  width: 7px; height: 14px;
+  background: var(--amber);
+  margin-left: 2px;
+  animation: blink 1s steps(1) infinite;
+  vertical-align: -2px;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.hint { margin-top: 16px; font-size: 11px; color: #556077; line-height: 1.6; }
+.hint code { color: var(--text-dim); }
+/* --- game picker (home page) --- */
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.game-card {
+  display: block;
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s, background 0.15s, transform 0.05s;
+  cursor: pointer;
+}
+.game-card:hover { border-color: var(--amber); background: #212a3a; }
+.game-card:active { transform: translateY(1px); }
+
+.game-card.disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.game-card.disabled:hover { border-color: var(--border); background: var(--bg-cell); }
+
+.game-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.game-name { font-size: 14px; font-weight: 700; }
+.soon-tag {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+.game-tagline {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+.game-players {
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.game-card.disabled .game-players { color: var(--text-dim); }
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.session-id {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.session-id b { color: var(--text); letter-spacing: 0.08em; }
+
+.peer-meter {
+  display: flex;
+  gap: 4px;
+}
+.peer-meter .bar {
+  width: 6px; height: 14px;
+  background: var(--border);
+  border-radius: 1px;
+}
+.peer-meter .bar.on { background: var(--cyan); }
+
+.turn-banner {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  min-height: 18px;
+  letter-spacing: 0.03em;
+}
+.turn-banner .sym { font-weight: 800; }
+.you-badge {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 18px;
+}
+/* used generically by every game — a viewer with no assigned seat */
+.you-badge .sym.spectator { color: var(--text-dim); font-weight: 800; }
+
+.actions { display: flex; gap: 10px; margin-bottom: 18px; }
+/* --- score board (shared structure + the default 2-player amber/cyan scheme
+   used by tic-tac-toe, dice, rps, hand cricket, and battleship) --- */
+
+.score-board {
+  display: flex;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.score-card {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.score-card:last-child {
+  border-right: none;
+}
+.score-label {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.score-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.score-card.player1 .score-val { color: var(--amber); }
+.score-card.player2 .score-val { color: var(--cyan); }
+.score-reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  background: var(--bg-cell);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.score-reset:hover { background: #212a3a; }
+.score-reset svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-dim);
+  transition: stroke 0.15s;
+}
+.score-reset:hover svg { stroke: var(--text); }
+.event-banner {
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  min-height: 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s, max-height 0.2s;
+  margin-bottom: 0;
+}
+.event-banner.show {
+  min-height: 18px;
+  max-height: 40px;
+  opacity: 1;
+  margin-bottom: 10px;
+}
+
+/* default 2-player turn/you-badge coloring, shared by dice, rps, hand
+   cricket, and battleship (all of which use P1/P2 as their role symbols) */
+.turn-banner .sym.P1 { color: var(--amber); }
+.turn-banner .sym.P2 { color: var(--cyan); }
+.you-badge .sym.P1 { color: var(--amber); font-weight: 800; }
+.you-badge .sym.P2 { color: var(--cyan); font-weight: 800; }
+.die {
+  --x: 50%;
+  --y: 50%;
+  --rot: 0deg;
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: default;
+  transform: rotate(var(--rot));
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s,
+    top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.die.rolling {
+  animation: dice-tumble 0.5s ease-in-out;
+}
+
+@keyframes dice-tumble {
+  0%   { transform: rotate(var(--rot)) scale(1); }
+  20%  { transform: rotate(calc(var(--rot) + 180deg)) scale(1.08); }
+  40%  { transform: rotate(calc(var(--rot) + 380deg)) scale(0.95); }
+  60%  { transform: rotate(calc(var(--rot) + 540deg)) scale(1.05); }
+  80%  { transform: rotate(calc(var(--rot) + 700deg)) scale(0.98); }
+  100% { transform: rotate(calc(var(--rot) + 720deg)) scale(1); }
+}
+
+.die.blank {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bg-cell),
+    var(--bg-cell) 4px,
+    #182030 4px,
+    #182030 8px
+  );
+  border-style: dashed;
+}
+
+.die.selectable {
+  cursor: pointer;
+  border-color: var(--text-dim);
+  z-index: 1;
+}
+.die.selectable:hover {
+  border-color: var(--amber);
+  background: #212a3a;
+  transform: rotate(var(--rot)) translateY(-4px) scale(1.08);
+  z-index: 2;
+}
+
+.die.selected {
+  border-color: var(--amber);
+  background: rgba(255, 180, 84, 0.12);
+  box-shadow: 0 0 10px rgba(255, 180, 84, 0.35);
+  z-index: 2;
+}
+.die.selected:active {
+  transform: rotate(var(--rot)) translateY(-1px) scale(1.04);
+}
+
+.die.kept {
+  border-color: var(--cyan);
+  background: rgba(95, 212, 208, 0.1);
+  opacity: 0.85;
+  cursor: default;
+}
+
+/* pips: 3x3 grid inside each die */
+.pip {
+  position: absolute;
+  width: 14%;
+  height: 14%;
+  border-radius: 50%;
+  background: var(--text);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+.die.kept .pip { background: var(--cyan); }
+.die.selected .pip { background: var(--amber); }
+
+.pip.tl { top: 22%; left: 22%; }
+.pip.tm { top: 22%; left: 50%; }
+.pip.tr { top: 22%; left: 78%; }
+.pip.ml { top: 50%; left: 22%; }
+.pip.mm { top: 50%; left: 50%; }
+.pip.mr { top: 50%; left: 78%; }
+.pip.bl { top: 78%; left: 22%; }
+.pip.bm { top: 78%; left: 50%; }
+.pip.br { top: 78%; left: 78%; }
+
+/* which pips are visible per face value */
+.die[data-value="1"] .pip.mm { opacity: 1; }
+
+.die[data-value="2"] .pip.tl,
+.die[data-value="2"] .pip.br { opacity: 1; }
+
+.die[data-value="3"] .pip.tl,
+.die[data-value="3"] .pip.mm,
+.die[data-value="3"] .pip.br { opacity: 1; }
+
+.die[data-value="4"] .pip.tl,
+.die[data-value="4"] .pip.tr,
+.die[data-value="4"] .pip.bl,
+.die[data-value="4"] .pip.br { opacity: 1; }
+
+.die[data-value="5"] .pip.tl,
+.die[data-value="5"] .pip.tr,
+.die[data-value="5"] .pip.mm,
+.die[data-value="5"] .pip.bl,
+.die[data-value="5"] .pip.br { opacity: 1; }
+
+.die[data-value="6"] .pip.tl,
+.die[data-value="6"] .pip.tr,
+.die[data-value="6"] .pip.ml,
+.die[data-value="6"] .pip.mr,
+.die[data-value="6"] .pip.bl,
+.die[data-value="6"] .pip.br { opacity: 1; }
+.copy-toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }

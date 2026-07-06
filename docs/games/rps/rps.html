@@ -3,18 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>staticgames — dice</title>
-<link rel="stylesheet" href="../style.css" />
+<title>staticgames — rock paper scissors</title>
+<link rel="stylesheet" href="../../shared.css" />
+<link rel="stylesheet" href="rps.css" />
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")location.replace("https:"+location.href.slice(5));</script>
 </head>
 <body>
-<div class="wrap dice-wrap">
+<div class="wrap rps-wrap">
   <div class="brand">
     <a href="../index.html" class="brand-link">staticgames</a>
-    <span class="dot">/</span>dice
+    <span class="dot">/</span>rps
   </div>
 
-  <div class="dice-layout">
+  <div class="rps-layout">
     <div class="panel">
       <div class="panel-bar">
         <span class="chip" id="conn-chip"></span>
@@ -30,30 +31,28 @@
         </div>
 
         <div class="turn-banner" id="turn-banner">&nbsp;</div>
-
         <div class="event-banner" id="event-banner"></div>
 
-        <div class="turn-pot">
-          <span class="pot-label">Turn score</span>
-          <span class="pot-value" id="turn-pot-value">0</span>
+        <div class="rps-reveal" id="rps-reveal">
+          <div class="rps-reveal-side">
+            <div class="rps-reveal-label" id="reveal-label-1">You</div>
+            <div class="rps-reveal-icon" id="reveal-icon-1">?</div>
+          </div>
+          <div class="rps-reveal-vs">VS</div>
+          <div class="rps-reveal-side">
+            <div class="rps-reveal-label" id="reveal-label-2">Opponent</div>
+            <div class="rps-reveal-icon" id="reveal-icon-2">?</div>
+          </div>
         </div>
 
-        <div class="dice-row" id="dice-row">
-          <!-- 6 dice added by js -->
+        <div class="rps-choices" id="rps-choices">
+          <!-- choice buttons added by js -->
         </div>
-
-        <div class="dice-preview" id="dice-preview">&nbsp;</div>
 
         <button class="scoring-toggle" id="scoring-toggle" type="button">
-          <span>Scoring guide</span>
+          <span>Rules guide</span>
           <span class="chevron">&#9662;</span>
         </button>
-
-        <div class="dice-actions">
-          <button id="roll-btn">Roll</button>
-          <button id="keep-btn">Keep Selected</button>
-          <button class="primary" id="bank-btn">Bank Score</button>
-        </div>
 
         <div class="you-badge" id="you-badge">&nbsp;</div>
 
@@ -72,15 +71,15 @@
             <div class="score-val" id="score-2">0</div>
           </div>
         </div>
-        <p class="hint" style="text-align:center; margin-top:10px;" id="target-hint">First to 5000 wins.</p>
+        <p class="hint" style="text-align:center; margin-top:10px;" id="target-hint">First to 3 wins.</p>
       </div>
     </div>
 
     <div class="panel scoring-panel" id="scoring-panel">
       <div class="panel-bar">
-        <span class="label">SCORING GUIDE</span>
+        <span class="label">RULES GUIDE</span>
       </div>
-      <div class="panel-body scoring-panel-body" id="scoring-table">
+      <div class="panel-body scoring-panel-body" id="rules-table">
         <!-- rows added by js -->
       </div>
     </div>
@@ -89,6 +88,6 @@
 
 <div class="copy-toast" id="copy-toast">Link copied</div>
 
-<script type="module" src="dice.js"></script>
+<script type="module" src="rps.js"></script>
 </body>
 </html>

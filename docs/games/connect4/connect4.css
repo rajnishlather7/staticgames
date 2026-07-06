@@ -1,0 +1,69 @@
+.score-card.player1.c4 .score-val { color: var(--red); }
+
+/* --- connect 4 --- */
+
+.c4-wrap { max-width: 420px; }
+@media (min-width: 600px) { .c4-wrap { max-width: 560px; } }
+@media (min-width: 900px) { .c4-wrap { max-width: 700px; } }
+
+.c4-board-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.c4-drop-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.c4-drop-btn {
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.c4-drop-btn::before {
+  content: "↓";
+  color: var(--text-dim);
+  font-weight: bold;
+}
+.c4-drop-btn:hover:not(:disabled) {
+  background: #212a3a;
+  border-color: var(--text-dim);
+}
+.c4-drop-btn:hover:not(:disabled)::before { color: var(--text); }
+.c4-drop-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.c4-board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  background: var(--border); /* acts as the blue board structure */
+  padding: 6px;
+  border-radius: var(--radius);
+}
+.c4-cell {
+  aspect-ratio: 1;
+  background: var(--bg-panel); /* hole color (empty) */
+  border-radius: 50%;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.c4-cell.R { background: var(--red); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); }
+.c4-cell.Y { background: var(--cyan); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); }
+.c4-cell.win { box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2), 0 0 12px 2px currentColor; z-index: 1; }
+.c4-cell.win.R { color: var(--red); }
+.c4-cell.win.Y { color: var(--cyan); }
+
+.turn-banner .sym.R { color: var(--red); }
+.turn-banner .sym.Y { color: var(--cyan); }
+.you-badge .sym.R { color: var(--red); font-weight: 800; }
+.you-badge .sym.Y { color: var(--cyan); font-weight: 800; }

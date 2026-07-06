@@ -1,0 +1,165 @@
+.event-banner.hc-out { color: var(--red); }
+.event-banner.hc-runs { color: var(--cyan); }
+
+/* --- hand cricket --- */
+
+.hc-wrap {
+  max-width: 420px;
+}
+
+.hc-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hc-phase-section {
+  margin-bottom: 14px;
+}
+
+.hc-innings-board {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.hc-innings-card {
+  flex: 1;
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.hc-innings-card.active {
+  border-color: var(--amber);
+}
+.hc-innings-label {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.hc-innings-score {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+}
+.hc-innings-score .wickets { color: var(--red); }
+.hc-innings-meta {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.hc-innings-target {
+  font-size: 10.5px;
+  color: var(--cyan);
+  margin-top: 2px;
+}
+
+.scoring-toggle {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  background: var(--bg-cell);
+}
+.scoring-toggle .chevron {
+  transition: transform 0.2s;
+  color: var(--text-dim);
+}
+.scoring-toggle.open .chevron {
+  transform: rotate(180deg);
+}
+
+.scoring-panel {
+  display: none; /* revealed by toggle on mobile, always-on via media query on wide screens */
+}
+.scoring-panel.open {
+  display: block;
+}
+
+.scoring-panel-body {
+  padding: 14px 16px;
+}
+
+.scoring-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.scoring-row:last-child { border-bottom: none; }
+.scoring-row .combo { color: var(--text-dim); }
+.scoring-row .pts { color: var(--text); font-weight: 700; white-space: nowrap; }
+.scoring-row.active {
+  background: rgba(255, 180, 84, 0.1);
+  margin: 0 -16px;
+  padding: 7px 16px;
+  border-radius: 4px;
+}
+.scoring-row.active .combo { color: var(--text); }
+.scoring-row.active .pts { color: var(--amber); }
+
+.scoring-row.wrap-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.scoring-row.wrap-row .pts {
+  white-space: normal;
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 11.5px;
+}
+.scoring-row.wrap-row .combo {
+  color: var(--text);
+  font-weight: 700;
+}
+.scoring-row.wrap-row.active .pts { color: var(--amber); }
+
+.scoring-note {
+  font-size: 10.5px;
+  color: #556077;
+  line-height: 1.5;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+/* Wide screens: side-by-side layout, scoring panel always visible, toggle hidden */
+@media (min-width: 760px) {
+  .hc-wrap {
+    max-width: 700px;
+  }
+  .hc-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .hc-layout .panel:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+  .scoring-panel {
+    display: block !important;
+    width: 240px;
+    flex-shrink: 0;
+  }
+  .scoring-toggle {
+    display: none !important;
+  }
+}
+@media (min-width: 1100px) {
+  .hc-wrap {
+    max-width: 860px;
+  }
+  .scoring-panel {
+    width: 300px;
+  }
+}

@@ -1,0 +1,41 @@
+.turn-banner .sym.X { color: var(--amber); }
+.turn-banner .sym.O { color: var(--cyan); }
+
+.tt-wrap { max-width: 420px; }
+@media (min-width: 600px) { .tt-wrap { max-width: 520px; } }
+@media (min-width: 900px) { .tt-wrap { max-width: 640px; } }
+@media (min-width: 600px) { .tt-wrap .cell { font-size: 42px; } }
+@media (min-width: 900px) { .tt-wrap .cell { font-size: 52px; } }
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.cell {
+  aspect-ratio: 1;
+  background: var(--bg-cell);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color 0.15s, background 0.15s;
+}
+.cell:hover:not(.filled):not(.disabled) { border-color: var(--text-dim); background: #212a3a; }
+.cell.filled, .cell.disabled { cursor: default; }
+.cell.X { color: var(--amber); }
+.cell.O { color: var(--cyan); }
+.cell.win { background: rgba(255, 180, 84, 0.12); border-color: var(--amber); }
+
+.you-badge .sym.X { color: var(--amber); font-weight: 800; }
+.you-badge .sym.O { color: var(--cyan); font-weight: 800; }
+
+@media (max-width: 420px) {
+  .cell { font-size: 26px; }
+}

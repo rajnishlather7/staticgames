@@ -1,0 +1,205 @@
+/* --- dice --- */
+
+.turn-pot {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.pot-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.pot-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--amber);
+}
+
+/* rolled-outcome banner colors */
+.event-banner.farkle { color: var(--red); }
+.event-banner.hotdice { color: var(--cyan); }
+.event-banner.win { color: var(--amber); }
+
+.dice-row {
+  position: relative;
+  height: 180px;
+  margin-bottom: 12px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.02), transparent 50%),
+    #0b0f16;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.35);
+}
+
+.dice-row.bust-flash {
+  animation: bust-pulse 0.9s ease-out;
+}
+
+@keyframes bust-pulse {
+  0%   { box-shadow: inset 0 2px 8px rgba(0,0,0,0.35), inset 0 0 0 2px rgba(255, 107, 107, 0.7); background-color: rgba(255, 107, 107, 0.08); }
+  100% { box-shadow: inset 0 2px 8px rgba(0,0,0,0.35), inset 0 0 0 2px rgba(255, 107, 107, 0); background-color: transparent; }
+}
+
+.dice-preview {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  min-height: 16px;
+  margin-bottom: 16px;
+}
+.dice-preview b { color: var(--amber); }
+
+.dice-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.dice-actions button { flex: 1; }
+.dice-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.dice-actions button:disabled:hover { border-color: var(--border); }
+.dice-actions button.primary:disabled:hover { filter: none; }
+
+.target-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.target-opt {
+  padding: 10px 4px;
+  font-size: 12.5px;
+  text-align: center;
+}
+.target-opt.selected {
+  background: var(--amber);
+  color: #1a1204;
+  border-color: var(--amber);
+}
+.target-opt.selected:hover { filter: brightness(1.08); }
+
+/* --- dice page layout with scoring side panel --- */
+
+.dice-wrap {
+  max-width: 420px;
+}
+
+.dice-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.scoring-toggle {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  background: var(--bg-cell);
+}
+.scoring-toggle .chevron {
+  transition: transform 0.2s;
+  color: var(--text-dim);
+}
+.scoring-toggle.open .chevron {
+  transform: rotate(180deg);
+}
+
+.scoring-panel {
+  display: none; /* revealed by toggle on mobile, always-on via media query on wide screens */
+}
+.scoring-panel.open {
+  display: block;
+}
+
+.scoring-panel-body {
+  padding: 14px 16px;
+}
+
+.scoring-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.scoring-row:last-child { border-bottom: none; }
+.scoring-row .combo { color: var(--text-dim); }
+.scoring-row .pts { color: var(--text); font-weight: 700; white-space: nowrap; }
+.scoring-row.active {
+  background: rgba(255, 180, 84, 0.1);
+  margin: 0 -16px;
+  padding: 7px 16px;
+  border-radius: 4px;
+}
+.scoring-row.active .combo { color: var(--text); }
+.scoring-row.active .pts { color: var(--amber); }
+
+.scoring-row.wrap-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.scoring-row.wrap-row .pts {
+  white-space: normal;
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 11.5px;
+}
+.scoring-row.wrap-row .combo {
+  color: var(--text);
+  font-weight: 700;
+}
+.scoring-row.wrap-row.active .pts { color: var(--amber); }
+
+.scoring-note {
+  font-size: 10.5px;
+  color: #556077;
+  line-height: 1.5;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+/* Wide screens: side-by-side layout, scoring panel always visible, toggle hidden */
+@media (min-width: 760px) {
+  .dice-wrap {
+    max-width: 700px;
+  }
+  .dice-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .dice-layout .panel:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+  .scoring-panel {
+    display: block !important;
+    width: 240px;
+    flex-shrink: 0;
+  }
+  .scoring-toggle {
+    display: none !important;
+  }
+}
+@media (min-width: 1100px) {
+  .dice-wrap {
+    max-width: 860px;
+  }
+  .scoring-panel {
+    width: 300px;
+  }
+}
