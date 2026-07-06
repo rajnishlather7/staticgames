@@ -2,6 +2,7 @@
 
 .ludo-wrap {
   max-width: 440px;
+
 }
 
 @media (min-width: 600px) {
@@ -25,12 +26,20 @@
 /* Reserve the event banner's space permanently so a hit/capture/finish
    message appearing or disappearing never shifts the board underneath it. */
 .ludo-wrap .event-banner {
-  height: 24px;
-  line-height: 24px;
+  height: 50px;
+  min-height: 50px;
+  max-height: 50px;
+
+  margin-bottom: 10px;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  opacity: 0;
+  transition: opacity .2s;
 }
+
 
 .ludo-wrap .event-banner.show {
   opacity: 1;
