@@ -505,3 +505,24 @@ button.ghost { color: var(--text-dim); }
   transition: opacity 0.2s, transform 0.2s;
 }
 .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+/* --- room-creation option picker (used by room.js on room.html, for
+   Dice's score target, RPS's variant/rounds, and Hand Cricket's
+   wickets/overs) --- */
+.target-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.target-opt {
+  padding: 10px 4px;
+  font-size: 12.5px;
+  text-align: center;
+}
+.target-opt.selected {
+  background: var(--amber);
+  color: #1a1204;
+  border-color: var(--amber);
+}
+.target-opt.selected:hover { filter: brightness(1.08); }
