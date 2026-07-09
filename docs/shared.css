@@ -20,8 +20,12 @@ html {
      scroll yet. Without this, a scrollbar popping in/out as page height
      changes shifts the available width — which can push it across one of
      the width-based breakpoints below and make the whole board visibly
-     resize for no reason tied to gameplay. */
+     resize for no reason tied to gameplay. scrollbar-gutter is the modern
+     way to do this; overflow-y:scroll is a much older, universally
+     supported fallback that guarantees the same thing even in browsers
+     that don't understand scrollbar-gutter. */
   scrollbar-gutter: stable;
+  overflow-y: scroll;
 }
 html, body {
   margin: 0;
