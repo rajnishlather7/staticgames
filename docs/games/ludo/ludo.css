@@ -171,12 +171,7 @@
 #start-btn {
   width: 100%;
   min-height: 46px;
-  opacity: 1;
   transition: opacity 0.2s;
-}
-#start-btn.hidden {
-  opacity: 0;
-  pointer-events: none;
 }
 /* Reuse Farkle's .die/.pip component for the roll result, but it needs to sit
    inline in a flex row instead of floating in an absolutely-positioned tray. */

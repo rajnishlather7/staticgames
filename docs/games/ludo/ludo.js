@@ -193,6 +193,8 @@ socket.addEventListener("close", () => {
 let lastSeenEventSeq = -1;
 let eventBannerTimeout = null;
 let lastSeenDice = null;
+let diceFlashTimeout = null;
+let lastFlashedSeq = -1;
 
 socket.addEventListener("message", (event) => {
   const data = JSON.parse(event.data);
@@ -310,8 +312,11 @@ function render() {
     });
   });
 
-  // dice
-  if (latest.dice) {
+  // dice — show the authoritative in-progress value, or briefly flash the
+  // just-rolled value when the roll resolved immediately with nothing to
+  // move (no legal moves / voided six / after a completed move).
+  if (latest.dice !== null) {
+    clearTimeout(diceFlashTimeout);
     diceEl.classList.remove("blank");
     diceEl.dataset.value = String(latest.dice);
     if (latest.dice !== lastSeenDice) {
@@ -319,11 +324,25 @@ function render() {
       void diceEl.offsetWidth; // restart animation
       diceEl.classList.add("rolling");
     }
-  } else {
-    diceEl.classList.add("blank");
-    delete diceEl.dataset.value;
+    lastSeenDice = latest.dice;
+  } else if (latest.lastEvent && latest.eventSeq !== lastFlashedSeq) {
+    lastFlashedSeq = latest.eventSeq;
+    const flashValue = latest.lastEvent.dice;
+    diceEl.classList.remove("blank");
+    diceEl.dataset.value = String(flashValue);
+    if (flashValue !== lastSeenDice) {
+      diceEl.classList.remove("rolling");
+      void diceEl.offsetWidth;
+      diceEl.classList.add("rolling");
+    }
+    lastSeenDice = flashValue;
+    clearTimeout(diceFlashTimeout);
+    diceFlashTimeout = setTimeout(() => {
+      diceEl.classList.add("blank");
+      delete diceEl.dataset.value;
+      lastSeenDice = null;
+    }, 1600);
   }
-  lastSeenDice = latest.dice;
 
   // roll button
   const canRoll = latest.phase === "playing" && mySymbol === latest.turn && latest.dice === null;
@@ -332,7 +351,8 @@ function render() {
 
   // start button
   const canStart = latest.phase === "lobby" && mySymbol && mySymbol !== "spectator" && latest.seats.length >= 2;
-  startBtn.classList.toggle("hidden", !canStart);
+  startBtn.style.opacity = canStart ? "1" : "0";
+  startBtn.style.pointerEvents = canStart ? "auto" : "none";
   startBtn.disabled = !canStart;
 
   // turn / status banner
