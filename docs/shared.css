@@ -159,6 +159,13 @@ button {
 }
 button:hover { border-color: var(--text-dim); }
 button:active { transform: translateY(1px); }
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+button:disabled:hover { border-color: var(--border); }
+button.primary:disabled:hover { filter: none; }
 
 button.primary {
   background: var(--amber);
