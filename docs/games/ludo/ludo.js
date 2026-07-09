@@ -228,7 +228,7 @@ function showEventBanner(ev) {
     }
     if (ev.extraTurn) text += " Extra turn!";
   }
-  eventBannerEl.textContent = text;
+  eventBannerEl.innerHTML = `<span>${text}</span>`;
   eventBannerEl.className = `event-banner show ${ev.color}`;
   eventBannerTimeout = setTimeout(() => eventBannerEl.classList.remove("show"), 3200);
 }
@@ -332,7 +332,8 @@ function render() {
 
   // start button
   const canStart = latest.phase === "lobby" && mySymbol && mySymbol !== "spectator" && latest.seats.length >= 2;
-  startBtn.style.display = canStart ? "block" : "none";
+  startBtn.classList.toggle("hidden", !canStart);
+  startBtn.disabled = !canStart;
 
   // turn / status banner
   if (latest.phase === "lobby") {

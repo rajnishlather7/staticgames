@@ -11,15 +11,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 50px;
-  min-height: 50px;
-  max-height: 50px;
+  text-align: center;
+  height: 60px;
+  min-height: 60px;
+  max-height: 60px;
   overflow: hidden;
+  padding: 0 10px;
   margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-cell);
+}
+.ludo-wrap .event-banner span {
   opacity: 0;
   transition: opacity 0.2s;
 }
-.ludo-wrap .event-banner.show {
+.ludo-wrap .event-banner.show span {
   opacity: 1;
 }
 
